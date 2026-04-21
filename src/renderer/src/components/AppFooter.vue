@@ -5,7 +5,7 @@ const appVersion = __APP_VERSION__
 
 <template>
   <n-flex :size="4" align="center" class="app-footer" justify="center">
-    <n-text depth="3" style="font-size: 12px"> v{{ appVersion }}-Beta@[RSTC]Urara_Chiya_Poi </n-text>
+    <n-text depth="3" style="font-size: 12px"> v{{ appVersion }}@[RSTC]Urara_Chiya_Poi </n-text>
   </n-flex>
 </template>
 
