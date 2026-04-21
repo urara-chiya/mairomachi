@@ -1,0 +1,81 @@
+appId: com.chiya.mairomachi
+productName: Mairomachi
+copyright: Copyright © 2026 Urara_Chiya_Poi
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+extraResources:
+  - from: 'build/icons'
+    to: 'icons'
+    filter: ['**/*']
+  - from: 'build/icon.png'
+    to: 'icons/icon.png'
+win:
+  executableName: mairomachi
+  verifyUpdateCodeSignature: true
+  icon: build/icons/win/icon.ico
+  target:
+    - target: nsis
+      arch: x64
+nsis:
+  artifactName: ${productName}-${version}-Windows-Setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  allowElevation: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  menuCategory: true
+  deleteAppDataOnUninstall: true
+  runAfterFinish: true
+  installerIcon: build/icons/win/icon.ico
+  uninstallerIcon: build/icons/win/icon.ico
+  installerHeaderIcon: build/icons/win/icon.ico
+  language: 2052
+  unicode: true
+  warningsAsErrors: false
+mac:
+  icon: build/icons/mac/icon.icns
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSCameraUsageDescription: Application requests access to the device's camera.
+    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  notarize: false
+  category: public.app-category.games
+  target:
+    - dmg
+    - zip
+dmg:
+  artifactName: ${productName}-${version}-macOS.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: Urara_Chiya_Poi
+  category: Game
+  executableName: mairomachi
+  desktop:
+    entry:
+      Name: 迷路町
+      Comment: 战舰世界对局查询与监控工具
+      Icon: icon
+      Categories: Game
+      Terminal: false
+  icon: build/icons/png
+appImage:
+  artifactName: ${productName}-${version}-Linux.${ext}
+npmRebuild: false
+electronDownload:
+  mirror: https://npmmirror.com/mirrors/electron/

@@ -1,0 +1,21 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+/test_env/
+/build/
+.env
+.env.development
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# TypeScript
+*.tsbuildinfo
+
+AGENTS.md
