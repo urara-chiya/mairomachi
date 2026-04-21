@@ -14,15 +14,15 @@ importers:
       '@electron-toolkit/utils':
         specifier: ^4.0.0
         version: 4.0.0(electron@39.8.8)
-      adm-zip:
-        specifier: ^0.5.17
-        version: 0.5.17
       axios:
         specifier: ^1.15.0
         version: 1.15.0
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
+      egoroof-blowfish:
+        specifier: ^4.0.2
+        version: 4.0.2
       electron-store:
         specifier: ^11.0.2
         version: 11.0.2
@@ -39,9 +39,6 @@ importers:
       '@electron-toolkit/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0(@types/node@22.19.17)
-      '@types/adm-zip':
-        specifier: ^0.5.8
-        version: 0.5.8
       '@types/node':
         specifier: ^22.19.1
         version: 22.19.17
@@ -839,9 +836,6 @@ packages:
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
     engines: {node: '>=10'}
 
-  '@types/adm-zip@0.5.8':
-    resolution: {integrity: sha512-RVVH7QvZYbN+ihqZ4kX/dMiowf6o+Jk1fNwiSdx0NahBJLU787zkULhGhJM8mf/obmLGmgdMM0bXsQTmyfbR7Q==}
-
   '@types/cacheable-request@6.0.3':
     resolution: {integrity: sha512-IQ3EbTzGxIigb1I3qPZc1rWJnH0BmSKv5QYTalEwweFvyBDLSAe24zP0le/hyi7ecGfZVlIVAg4BZqb8WBwKqw==}
 
@@ -1017,10 +1011,6 @@ packages:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-
-  adm-zip@0.5.17:
-    resolution: {integrity: sha512-+Ut8d9LLqwEvHHJl1+PIHqoyDxFgVN847JTVM3Izi3xHDWPE4UtzzXysMZQs64DMcrJfBeS/uoEP4AD3HQHnQQ==}
-    engines: {node: '>=12.0'}
 
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
@@ -1390,6 +1380,9 @@ packages:
 
   echarts@6.0.0:
     resolution: {integrity: sha512-Tte/grDQRiETQP4xz3iZWSvoHrkCQtwqd6hs+mifXcjrCuo2iKWbajFObuLJVBlDIJlOzgQPd1hsaKt/3+OMkQ==}
+
+  egoroof-blowfish@4.0.2:
+    resolution: {integrity: sha512-cpx71NSHTItYMJljgOh9DQdufFPfI3dIjIav/WSkvwqELZQrO9rxcVLPjubApjnj3ROqBYMPUP22rPjNkqrwqA==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -3436,10 +3429,6 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@types/adm-zip@0.5.8':
-    dependencies:
-      '@types/node': 22.19.17
-
   '@types/cacheable-request@6.0.3':
     dependencies:
       '@types/http-cache-semantics': 4.2.0
@@ -3681,8 +3670,6 @@ snapshots:
       acorn: 8.16.0
 
   acorn@8.16.0: {}
-
-  adm-zip@0.5.17: {}
 
   agent-base@7.1.4: {}
 
@@ -4116,6 +4103,8 @@ snapshots:
     dependencies:
       tslib: 2.3.0
       zrender: 6.0.0
+
+  egoroof-blowfish@4.0.2: {}
 
   ejs@3.1.10:
     dependencies:

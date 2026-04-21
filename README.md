@@ -24,23 +24,32 @@ PR 评级等数据。
 - **设备认证体系**：首次使用输入邀请码激活设备，生成 Ed25519 密钥对并与设备指纹绑定；后续自动登录使用私钥签名，无需重复输入。
 - **多语言与主题切换**：支持简体中文界面，舰船名称可在简中/繁中/英文/日文之间切换；支持明亮/黑暗主题。
 
+### 主要页面展示
+
+- 对局监控页面
+![monitor-page.png](image/monitor-page.png)
+- 对局记录页面
+![record-page.png](image/record-page.png)
+- 对局记录详情页面
+![record-detail.png](image/record-detail.png)
+
 ---
 
 ## 技术栈
 
-| 层级        | 技术                                                   |
-|-----------|------------------------------------------------------|
-| 桌面框架      | Electron `^39.2.6`                                   |
-| 前端框架      | Vue 3 `^3.5.25` (Composition API + `<script setup>`) |
-| 类型系统      | TypeScript `^5.9.3`（严格模式）                            |
-| 构建工具      | Vite `^7.2.6` (via `electron-vite`)                  |
-| UI 组件库    | Naive UI `^2.44.1`                                   |
+| 层级        | 技术                                                 |
+| ----------- | ---------------------------------------------------- |
+| 桌面框架    | Electron `^39.2.6`                                   |
+| 前端框架    | Vue 3 `^3.5.25` (Composition API + `<script setup>`) |
+| 类型系统    | TypeScript `^5.9.3`（严格模式）                      |
+| 构建工具    | Vite `^7.2.6` (via `electron-vite`)                  |
+| UI 组件库   | Naive UI `^2.44.1`                                   |
 | 图表        | ECharts `^6.0.0` + vue-echarts `^8.0.1`              |
-| 状态/存储     | `ref` / `reactive` / `electron-store`                |
-| HTTP      | Axios `^1.15.0`                                      |
-| 文件监控      | chokidar `^5.0.0`                                    |
-| Replay 解析 | 纯 Node.js 引擎（`adm-zip` + Buffer 扫描）                  |
-| 包管理器      | pnpm                                                 |
+| 状态/存储   | `ref` / `reactive` / `electron-store`                |
+| HTTP        | Axios `^1.15.0`                                      |
+| 文件监控    | chokidar `^5.0.0`                                    |
+| Replay 解析 | 纯 Node.js 引擎（`adm-zip` + Buffer 扫描）           |
+| 包管理器    | pnpm                                                 |
 
 ---
 
@@ -142,23 +151,23 @@ pnpm build:linux
 ## 认证流程
 
 1. **首次激活**
-    - 用户输入邀请码（激活码）。
-    - 客户端生成本地 Ed25519 密钥对 + 设备指纹（基于 OS 信息 SHA256）。
-    - 调用 `POST /api/v1/auth/activate`，上传公钥和设备指纹，获取 JWT。
-    - 使用 `electron-store` 保存：加密后的私钥、公钥、设备指纹、原始激活码。
+   - 用户输入邀请码（激活码）。
+   - 客户端生成本地 Ed25519 密钥对 + 设备指纹（基于 OS 信息 SHA256）。
+   - 调用 `POST /api/v1/auth/activate`，上传公钥和设备指纹，获取 JWT。
+   - 使用 `electron-store` 保存：加密后的私钥、公钥、设备指纹、原始激活码。
 
 2. **自动登录**
-    - 启动时从 `key-store` 读取激活码和私钥。
-    - 构造签名载荷：`METHOD|URI|timestamp|nonce`。
-    - 使用私钥进行 Ed25519 签名，通过请求头发送。
-    - 调用 `POST /api/v1/auth/login`，获取新 JWT。
-    - 登录成功后自动初始化舰船信息缓存。
+   - 启动时从 `key-store` 读取激活码和私钥。
+   - 构造签名载荷：`METHOD|URI|timestamp|nonce`。
+   - 使用私钥进行 Ed25519 签名，通过请求头发送。
+   - 调用 `POST /api/v1/auth/login`，获取新 JWT。
+   - 登录成功后自动初始化舰船信息缓存。
 
 3. **Token 刷新**
-    - 当 Token 临近过期时，调用 `POST /api/v1/auth/refresh` 获取新 Token。
+   - 当 Token 临近过期时，调用 `POST /api/v1/auth/refresh` 获取新 Token。
 
 4. **登出**
-    - 清除本地 JWT Token 和所有密钥凭证。
+   - 清除本地 JWT Token 和所有密钥凭证。
 
 ---
 
@@ -173,24 +182,24 @@ pnpm build:linux
 
 ## 主要页面
 
-| 页面                   | 说明                                                 |
-|----------------------|----------------------------------------------------|
-| **LaunchPage**       | 应用启动页：加载动画、自动登录、Token 刷新、错误重试。                     |
-| **ActivatePage**     | 设备激活页：输入邀请码，完成首次绑定。                                |
-| **ArenaMonitorPage** | 对局监控主页面：实时展示敌我双方玩家卡片与右侧图表面板。                       |
-| **RecordPage**       | 战绩记录列表页：展示本地缓存的 replay 解析结果，点击卡片进入详情抽屉。            |
+| 页面                 | 说明                                                                   |
+| -------------------- | ---------------------------------------------------------------------- |
+| **LaunchPage**       | 应用启动页：加载动画、自动登录、Token 刷新、错误重试。                 |
+| **ActivatePage**     | 设备激活页：输入邀请码，完成首次绑定。                                 |
+| **ArenaMonitorPage** | 对局监控主页面：实时展示敌我双方玩家卡片与右侧图表面板。               |
+| **RecordPage**       | 战绩记录列表页：展示本地缓存的 replay 解析结果，点击卡片进入详情抽屉。 |
 | **RecordDetailPage** | 战绩详情页：分 `allies` / `enemies` 两栏展示单局 replay 中的玩家数据。 |
-| **SettingsPage**     | 设置弹窗：游戏目录、自动监控、战绩缓存天数、主题、UI 方向、语言等。                |
-| **HelpPage**         | 帮助页面：使用说明与常见问题。                                    |
+| **SettingsPage**     | 设置弹窗：游戏目录、自动监控、战绩缓存天数、主题、UI 方向、语言等。    |
+| **HelpPage**         | 帮助页面：使用说明与常见问题。                                         |
 
 ---
 
 ## 文档导航
 
-| 文档                                   | 内容                               |
-|--------------------------------------|----------------------------------|
-| [CHANGELOG.md](./CHANGELOG.md)       | 版本变更日志                           |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南与开发环境搭建                      |
+| 文档                                 | 内容                   |
+| ------------------------------------ | ---------------------- |
+| [CHANGELOG.md](./CHANGELOG.md)       | 版本变更日志           |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献指南与开发环境搭建 |
 
 ---
 

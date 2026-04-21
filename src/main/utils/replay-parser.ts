@@ -1,11 +1,24 @@
 /**
  * Replay 文件轻量解析器（analyze-lite）
  *
- * 不依赖游戏元数据或外部二进制（replayshark.exe），直接扫描 replay 文件中的
- * BattleResults packet（type 0x22）提取结算数据。性能开销极低，适合客户端
- * 实时解析。
+ * 自定义二进制格式，扫描 BattleResults packet（type 0x22）提取结算数据。
  *
- * 索引对照表（15.3+ 客户端验证）：
+ * 文件格式（15.3+）：
+ *   [0..4)   magic (le_u32)
+ *   [4..8)   block_count (le_u32)
+ *   [8..12)  meta_len (le_u32)
+ *   [12..12+meta_len) JSON 元数据（UTF-8）
+ *   随后 (block_count-1) 个额外 block：4 字节长度 + 数据
+ *   随后 4 字节 decompressed_size
+ *   随后 4 字节 compressed_size
+ *   剩余部分：Blowfish 加密 + zlib 压缩的 packet_data
+ *
+ * 解密流程：
+ *   1. Blowfish ECB 逐块解密（使用固定密钥）
+ *   2. Rust-style CBC：每块解密后与上一块的明文 XOR（非标准 CBC）
+ *   3. zlib inflate 解压
+ *
+ * 索引对照表：
  *   [0]   = account_id
  *   [1]   = name
  *   [6]   = team_id（0-based：0 或 1）
@@ -17,14 +30,130 @@
  *   [486] = frags
  */
 
-import AdmZip from 'adm-zip'
-import { ReplayLitePlayer, ReplayLiteReport } from '../type'
+import fs from 'node:fs'
+import zlib from 'node:zlib'
+import { Blowfish } from 'egoroof-blowfish'
+import { ReplayLiteReport, ReplayLitePlayer } from '../type'
+
+const BLOWFISH_KEY = new Uint8Array([
+  0x29, 0xb7, 0xc9, 0x09, 0x38, 0x3f, 0x84, 0x88, 0xfa, 0x98, 0xec, 0x4e, 0x13, 0x19, 0x79, 0xfb
+])
 
 /** 解析异常 */
 export class ReplayParseError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'ReplayParseError'
+  }
+}
+
+/** little-endian u32 */
+function readUInt32LE(buf: Buffer, offset: number): number {
+  return buf[offset] | (buf[offset + 1] << 8) | (buf[offset + 2] << 16) | (buf[offset + 3] << 24)
+}
+
+/**
+ * 解析 replay 文件头并提取加密后的 packet_data。
+ *
+ * 返回 { meta, encryptedPacketData }
+ */
+function readReplayFile(filePath: string): { meta: Record<string, unknown>; encrypted: Buffer } {
+  let data: Buffer
+  try {
+    data = fs.readFileSync(filePath)
+  } catch {
+    throw new ReplayParseError(`Failed to read replay file: ${filePath}`)
+  }
+
+  let offset = 0
+
+  // const magic = readUInt32LE(data, offset)
+  offset += 4
+  // Magic 为 0x11343212，此处不做严格校验以兼容未来版本变动
+
+  const blockCount = readUInt32LE(data, offset)
+  offset += 4
+
+  const metaLen = readUInt32LE(data, offset)
+  offset += 4
+  if (offset + metaLen > data.length) {
+    throw new ReplayParseError('Invalid replay: meta length exceeds file size')
+  }
+
+  const metaBuf = data.subarray(offset, offset + metaLen)
+  let meta: Record<string, unknown>
+  try {
+    meta = JSON.parse(metaBuf.toString('utf-8')) as Record<string, unknown>
+  } catch {
+    throw new ReplayParseError('Failed to parse replay meta JSON')
+  }
+  offset += metaLen
+
+  for (let i = 0; i < blockCount - 1; i++) {
+    const blockSize = readUInt32LE(data, offset)
+    offset += 4
+    if (offset + blockSize > data.length) {
+      throw new ReplayParseError('Invalid replay: extra block exceeds file size')
+    }
+    offset += blockSize
+  }
+
+  if (offset + 8 > data.length) {
+    throw new ReplayParseError('Invalid replay: missing size footer')
+  }
+
+  // decompressed_size + compressed_size（解析流程中不严格校验）
+  offset += 4 + 4
+
+  const encrypted = data.subarray(offset)
+  if (encrypted.length === 0) {
+    throw new ReplayParseError('Invalid replay: no encrypted packet data')
+  }
+  if (encrypted.length % 8 !== 0) {
+    throw new ReplayParseError('Invalid replay: encrypted data length is not a multiple of 8')
+  }
+
+  return { meta, encrypted }
+}
+
+/**
+ * Blowfish 解密 + zlib 解压。
+ *
+ * 自定义 chaining mode：
+ * - 初始化 previous = [0,0,0,0,0,0,0,0]
+ * - 对每个块 ECB 解密
+ * - 解密结果与 previous XOR 得到明文
+ * - previous = 当前明文
+ */
+function decryptPacketData(encrypted: Buffer): Buffer {
+  const bf = new Blowfish(BLOWFISH_KEY, Blowfish.MODE.ECB, Blowfish.PADDING.PKCS5)
+
+  // 必须一次性批量 ECB 解密。egoroof-blowfish 逐块调用 bf.decode() 会改变内部状态，导致后续块解密结果错误。
+  const ecbDecrypted = Buffer.from(bf.decode(encrypted, Blowfish.TYPE.UINT8_ARRAY))
+
+  const blockSize = 8
+  const numBlocks = ecbDecrypted.length / blockSize
+  const decrypted = Buffer.alloc(ecbDecrypted.length)
+  const previous = Buffer.alloc(8, 0)
+
+  for (let i = 0; i < numBlocks; i++) {
+    const blockOffset = i * blockSize
+
+    // Rust-style CBC：与上一块明文 XOR
+    for (let j = 0; j < 8; j++) {
+      decrypted[blockOffset + j] = ecbDecrypted[blockOffset + j] ^ previous[j]
+    }
+
+    // previous 更新为当前明文（Rust 风格，非标准 CBC）
+    for (let j = 0; j < 8; j++) {
+      previous[j] = decrypted[blockOffset + j]
+    }
+  }
+
+  try {
+    return zlib.inflateSync(decrypted)
+  } catch {
+    throw new ReplayParseError('Failed to decompress packet data')
   }
 }
 
@@ -42,8 +171,8 @@ export class ReplayParseError extends Error {
 function scanBattleResults(packetData: Buffer): string | null {
   let offset = 0
   while (offset + 12 <= packetData.length) {
-    const packetSize = packetData.readUInt32LE(offset)
-    const packetType = packetData.readUInt32LE(offset + 4)
+    const packetSize = readUInt32LE(packetData, offset)
+    const packetType = readUInt32LE(packetData, offset + 4)
 
     if (offset + 12 + packetSize > packetData.length) {
       break
@@ -54,7 +183,7 @@ function scanBattleResults(packetData: Buffer): string | null {
       if (payload.length < 4) {
         return null
       }
-      const jsonLen = payload.readUInt32LE(0)
+      const jsonLen = readUInt32LE(payload, 0)
       if (payload.length < 4 + jsonLen) {
         return null
       }
@@ -102,7 +231,6 @@ function inferWinner(players: ReplayLitePlayer[]): ReplayLiteReport['match_resul
     const sorted = [...exps].sort((a, b) => a - b)
     let avg: number
     if (exps.length <= 2) {
-      // 人数不足，退化为普通平均
       avg = sorted.reduce((a, b) => a + b, 0) / sorted.length
     } else {
       const trimmed = sorted.slice(1, -1)
@@ -137,27 +265,9 @@ function inferWinner(players: ReplayLitePlayer[]): ReplayLiteReport['match_resul
  * @throws {ReplayParseError} 文件格式非法或缺少 BattleResults packet
  */
 export function parseReplayLite(filePath: string): ReplayLiteReport {
-  let zip: AdmZip
-  try {
-    zip = new AdmZip(filePath)
-  } catch {
-    throw new ReplayParseError(`Failed to open replay as ZIP: ${filePath}`)
-  }
+  const { meta, encrypted } = readReplayFile(filePath)
+  const packetData = decryptPacketData(encrypted)
 
-  const metaEntry = zip.getEntry('replay.json')
-  const packetEntry = zip.getEntry('packet_data')
-  if (!metaEntry || !packetEntry) {
-    throw new ReplayParseError('Invalid replay: missing replay.json or packet_data')
-  }
-
-  let meta: Record<string, unknown>
-  try {
-    meta = JSON.parse(metaEntry.getData().toString('utf-8')) as Record<string, unknown>
-  } catch {
-    throw new ReplayParseError('Failed to parse replay.json')
-  }
-
-  const packetData = packetEntry.getData()
   const battleResultsJson = scanBattleResults(packetData)
   if (!battleResultsJson) {
     throw new ReplayParseError('No BattleResults packet found')
