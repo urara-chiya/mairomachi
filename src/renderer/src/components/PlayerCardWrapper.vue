@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ArenaPlayerStatItem } from '@shared/types'
-import { computed, ref } from 'vue'
+import { computed, CSSProperties, ref } from 'vue'
 
 const props = defineProps<{
   pr?: ArenaPlayerStatItem
@@ -48,12 +48,17 @@ const cardStyle = computed(() => {
     transition: 'box-shadow 0.2s ease, border-color 0.2s ease'
   }
 })
+
+const cardContentStyle: CSSProperties = {
+  padding: '4px 12px'
+}
 </script>
 
 <template>
   <n-card
     :style="cardStyle"
     class="player-card-wrapper"
+    :content-style="cardContentStyle"
     size="small"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false">
@@ -63,10 +68,6 @@ const cardStyle = computed(() => {
 
 <style scoped>
 .player-card-wrapper {
-  display: flex;
-  flex: 1;
-  min-height: 60px;
-  max-height: 100px;
   border-radius: 8px;
   overflow: hidden;
   transition:
@@ -78,12 +79,5 @@ const cardStyle = computed(() => {
 
 .player-card-wrapper:hover {
   cursor: pointer;
-}
-
-.player-card-wrapper :deep(.n-card-content) {
-  padding: 4px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 </style>

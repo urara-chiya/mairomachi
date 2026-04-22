@@ -204,55 +204,34 @@ function toInt(v: unknown): number {
 /**
  * 通过 raw_exp 推断胜负（相对于 Self 的视角）。
  *
- * 对每队 raw_exp 排序后去掉最高和最低值取平均（trimmed mean）；
- * 若任一队人数不足掐头去尾，则退化为普通算术平均。
- *
- * 返回值中的 `result` 以 Self 为参照：
- *   - "win"     Self 所在队伍平均值更高
- *   - "loss"    Self 所在队伍平均值更低
- *   - "unknown" 找不到 Self 或数据异常无法推断
- *
- * `team_id` 固定为 Self 的 team_id，方便服务层直接消费。
+ * 如果 Ally / Self 的 exp 是 raw_exp 的1.5倍，为 win，否则为 loss
  */
-function inferWinner(players: ReplayLitePlayer[]): ReplayLiteReport['match_result'] {
-  const teamExps = new Map<number, number[]>()
+function inferWinner(players: ReplayLitePlayer[]): ReplayLiteReport['matchResult'] {
+  // 记录友方的 teamId，用于填充平局的 teamId
+  let allyId: number = -1
   for (const p of players) {
-    const list = teamExps.get(p.team_id) ?? []
-    list.push(p.raw_exp ?? 0)
-    teamExps.set(p.team_id, list)
-  }
-
-  if (teamExps.size !== 2) {
-    return undefined
-  }
-
-  const avgs: Array<[number, number]> = []
-  for (const [teamId, exps] of teamExps) {
-    const sorted = [...exps].sort((a, b) => a - b)
-    let avg: number
-    if (exps.length <= 2) {
-      avg = sorted.reduce((a, b) => a + b, 0) / sorted.length
-    } else {
-      const trimmed = sorted.slice(1, -1)
-      avg = trimmed.reduce((a, b) => a + b, 0) / trimmed.length
+    const { rawExp, exp, teamId, relation } = p
+    // 跳过为0的
+    if (!rawExp || !exp || rawExp <= 0 || exp <= 0) {
+      continue
     }
-    avgs.push([teamId, avg])
+    if (relation === 'Self' || relation === 'Ally') {
+      allyId = teamId
+      return {
+        result: exp > rawExp ? 'win' : 'loss',
+        teamId
+      }
+    } else {
+      return {
+        result: exp > rawExp ? 'loss' : 'win',
+        teamId: teamId === 0 ? 1 : 0
+      }
+    }
   }
-
-  avgs.sort((a, b) => b[1] - a[1])
-  const winnerTeamId = avgs[0][0]
-
-  const selfPlayer = players.find((p) => p.relation === 'Self')
-  if (!selfPlayer) {
-    return { result: 'unknown', team_id: winnerTeamId, inferred: true }
-  }
-
-  const selfTeamId = selfPlayer.team_id
-  const result = selfTeamId === winnerTeamId ? 'win' : 'loss'
 
   return {
-    result,
-    team_id: selfTeamId,
+    result: 'draw',
+    teamId: allyId,
     inferred: true
   }
 }
@@ -319,15 +298,15 @@ export function parseReplayLite(filePath: string): ReplayLiteReport {
     }
 
     players.push({
-      account_id: toInt(arr[0]),
+      accountId: toInt(arr[0]),
       name,
-      ship_id: toInt(arr[7]),
-      team_id: teamId,
+      shipId: toInt(arr[7]),
+      teamId,
       relation,
-      is_bot: false,
+      isBot: false,
       damage: toInt(arr[426]),
       frags: toInt(arr[486]),
-      raw_exp: toInt(arr[403]),
+      rawExp: toInt(arr[403]),
       exp: toInt(arr[404])
     })
   }
@@ -335,11 +314,11 @@ export function parseReplayLite(filePath: string): ReplayLiteReport {
   const matchResult = inferWinner(players)
 
   return {
-    match_result: matchResult,
-    map_name: typeof meta.mapName === 'string' ? meta.mapName : undefined,
-    game_mode: typeof meta.scenario === 'string' ? meta.scenario : undefined,
-    match_group: typeof meta.matchGroup === 'string' ? meta.matchGroup : undefined,
-    finish_type: null,
+    matchResult,
+    mapName: typeof meta.mapName === 'string' ? meta.mapName : undefined,
+    gameMode: typeof meta.scenario === 'string' ? meta.scenario : undefined,
+    matchGroup: typeof meta.matchGroup === 'string' ? meta.matchGroup : undefined,
+    finishType: null,
     players
   }
 }

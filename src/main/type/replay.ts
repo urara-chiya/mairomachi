@@ -16,37 +16,34 @@ export interface ReplayMatchResult {
 /**
  * replay-parser（analyze-lite）原始玩家数据
  *
- * 字段名保持与 replayshark 输出一致（snake_case），
- * 由调用方（如 replay-service）负责映射到 camelCase 的业务类型。
+ * 字段名直接使用 camelCase，与业务类型保持一致，无需额外映射。
  */
 export interface ReplayLitePlayer {
-  account_id: number
+  accountId: number
   name: string
-  ship_id: number
-  team_id: number
+  shipId: number
+  teamId: number
   relation: string
-  is_bot: boolean
+  isBot: boolean
   damage: number
   frags: number
   exp?: number
-  raw_exp?: number
+  rawExp?: number
 }
 
 /**
  * replay-parser（analyze-lite）原始报告结构
- *
- * 与 replayshark analyze-lite 的 JSON 输出字段一一对应。
  */
 export interface ReplayLiteReport {
-  match_result?: {
+  matchResult?: {
     result?: string
-    team_id?: number
+    teamId?: number
     inferred?: boolean
   }
-  map_name?: string
-  game_mode?: string
-  match_group?: string
-  finish_type?: string | null
+  mapName?: string
+  gameMode?: string
+  matchGroup?: string
+  finishType?: string | null
   players?: ReplayLitePlayer[]
 }
 

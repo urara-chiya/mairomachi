@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, CSSProperties, onMounted, onUnmounted, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { CloseOutlined } from '@vicons/antd'
 import { useAsync } from '@renderer/composables/useAsync'
@@ -176,6 +176,9 @@ onMounted(async () => {
   await loadBatchPr()
 
   unsubscribeSettings = window.ipc.settings.onChanged((cfg) => {
+    if (recordConfig.value) {
+      recordConfig.value.enableAutoRecord = cfg.record.enableAutoRecord
+    }
     shipNameLanguage.value = cfg.ui.shipNameLanguage
     allyUI.value = cfg.ui.allyUI
     enemyUI.value = cfg.ui.enemyUI
@@ -185,119 +188,132 @@ onMounted(async () => {
 onUnmounted(() => {
   unsubscribeSettings?.()
 })
+
+const recordPageContentStyle: CSSProperties = {
+  height: '100%',
+  width: '100%'
+}
+const wrapperCardContentStyle: CSSProperties = {
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  alignItems: 'center'
+}
 </script>
 
 <template>
-  <n-spin :show="isLoading || isLoadingStats || isLoadingBatchPr" class="record-page" description="正在加载记录...">
-    <n-flex v-if="!isRecordReady" align="center" class="empty-wrapper" justify="center">
-      <n-empty description="请在“设置”中配置游戏路径并开启自动记录" size="large">
-        <template #extra>
-          <n-text depth="3">未检测到有效的对局记录配置</n-text>
-        </template>
-      </n-empty>
-    </n-flex>
-    <n-flex v-else-if="records.length <= 0" align="center" class="empty-wrapper" justify="center">
-      <n-empty description="这里什么也没有。。。" size="large">
-        <template #extra>
-          <n-text depth="3">自动保存的对局记录会显示在这里</n-text>
-        </template>
-      </n-empty>
-    </n-flex>
-    <n-flex v-else :size="12" class="record-page-content" vertical>
-      <n-flex :size="12" align="center" class="record-header" justify="space-between">
-        <n-card class="record-stat" size="small" title="总场次">
-          <n-text class="stat-font" type="info">{{ totalCount }}</n-text>
-        </n-card>
-        <n-card class="record-stat" size="small" title="胜利">
-          <n-text class="stat-font" type="success">{{ winCount }}</n-text>
-        </n-card>
-        <n-card class="record-stat" size="small" title="失败">
-          <n-text class="stat-font" type="error">{{ lossCount }}</n-text>
-        </n-card>
-        <n-card class="record-stat" size="small" title="胜率">
-          <n-text :style="{ color: stats?.winRateColor }" class="stat-font">{{ stats?.winRate ?? 0 }}%</n-text>
-        </n-card>
-        <n-card class="record-stat" size="small" title="场均">
-          <n-text :style="{ color: stats?.avgDamageColor }" class="stat-font">{{ stats?.avgDamage ?? 0 }}</n-text>
-        </n-card>
-        <n-card class="record-stat" size="small" title="PR">
-          <n-text :style="{ color: stats?.prColor }" class="stat-font">{{ stats?.avgPr ?? 0 }}</n-text>
-        </n-card>
+  <n-spin
+    :show="isLoading || isLoadingStats || isLoadingBatchPr"
+    class="record-page"
+    :content-style="recordPageContentStyle"
+    description="正在加载记录...">
+    <template #default>
+      <n-flex v-if="!isRecordReady" align="center" class="empty-wrapper" justify="center">
+        <n-empty description="请在“设置”中配置游戏路径并开启自动记录" size="large">
+          <template #extra>
+            <n-text depth="3">未检测到有效的对局记录配置</n-text>
+          </template>
+        </n-empty>
       </n-flex>
-      <n-flex class="record-list-wrapper">
-        <n-card class="record-card-wrapper" content-scrollable size="small">
-          <n-alert :bordered="false" :show-icon="true" size="small" type="warning">
-            本应用无法直接从 replay 文件读取对局胜负结果，而是通过双方经验分布推断赢家。
-            该判断方式可适配绝大多数对局，可能存在小概率误判。
-          </n-alert>
-          <n-alert :bordered="false" :show-icon="true" size="small" type="info">
-            仅随机战（PvP）对局会被自动保存，其他模式（排位、军团战、剧情等）不会计入记录。
-          </n-alert>
-          <record-card
-            v-for="record in records"
-            :key="record.id"
-            :dmg="recordPrMap[record.id]?.dmg"
-            :frags="recordPrMap[record.id]?.frags"
-            :language="shipNameLanguage"
-            :pr="recordPrMap[record.id]?.pr"
-            :record="record"
-            :ship-info="shipInfoMap[getSelfPlayer(record)?.shipId ?? 0]"
-            :xp="recordPrMap[record.id]?.xp"
-            @click="openDetail"
-            @delete="deleteRecordById" />
-        </n-card>
+      <n-flex v-else-if="records.length <= 0" align="center" class="empty-wrapper" justify="center">
+        <n-empty description="这里什么也没有。。。" size="large">
+          <template #extra>
+            <n-text depth="3">自动保存的对局记录会显示在这里</n-text>
+          </template>
+        </n-empty>
       </n-flex>
-    </n-flex>
-
-    <n-drawer
-      v-model:show="showDetail"
-      :block-scroll="false"
-      :mask-closable="true"
-      :trap-focus="false"
-      placement="right"
-      width="100%">
-      <n-drawer-content :native-scrollbar="false" class="record-detail-drawer">
-        <template #header>
-          <n-flex align="center" justify="space-between" style="width: 100%">
-            <n-flex align="center">
-              <n-tag :type="getResultTagType(selectedRecord?.matchResult?.result)">
-                {{ getResultText(selectedRecord?.matchResult?.result) }}
-              </n-tag>
-              <n-text>{{ selectedRecord?.mapName || '对局详情' }}</n-text>
-            </n-flex>
-            <n-flex align="center">
-              <n-text depth="3" style="font-size: 14px"
-                >{{ selectedRecord?.gameMode }} · {{ selectedRecord?.matchGroup }}</n-text
-              >
-              <n-text depth="3" style="font-size: 14px">{{
-                selectedRecord ? formatDate(selectedRecord.dateTime) : ''
-              }}</n-text>
-              <n-button secondary size="small" type="tertiary" @click="showDetail = false">
-                <template #icon>
-                  <close-outlined />
-                </template>
-              </n-button>
-            </n-flex>
+      <template v-else>
+        <div class="record-page-content">
+          <n-flex align="center" class="record-stat-wrapper" justify="space-between" :size="8">
+            <n-card class="record-stat-card" size="small" title="总场次">
+              <n-text class="stat-font" type="info">{{ totalCount }}</n-text>
+            </n-card>
+            <n-card class="record-stat-card" size="small" title="胜利">
+              <n-text class="stat-font" type="success">{{ winCount }}</n-text>
+            </n-card>
+            <n-card class="record-stat-card" size="small" title="失败">
+              <n-text class="stat-font" type="error">{{ lossCount }}</n-text>
+            </n-card>
+            <n-card class="record-stat-card" size="small" title="胜率">
+              <n-text :style="{ color: stats?.winRateColor }" class="stat-font">{{ stats?.winRate ?? 0 }}%</n-text>
+            </n-card>
+            <n-card class="record-stat-card" size="small" title="场均">
+              <n-text :style="{ color: stats?.avgDamageColor }" class="stat-font">{{ stats?.avgDamage ?? 0 }}</n-text>
+            </n-card>
+            <n-card class="record-stat-card" size="small" title="PR">
+              <n-text :style="{ color: stats?.prColor }" class="stat-font">{{ stats?.avgPr ?? 0 }}</n-text>
+            </n-card>
           </n-flex>
-        </template>
-        <record-detail-page
-          :ally-ui="allyUI"
-          :enemy-ui="enemyUI"
-          :language="shipNameLanguage"
-          :record="selectedRecord"
-          @close="showDetail = false" />
-      </n-drawer-content>
-    </n-drawer>
+          <n-card
+            class="record-list-wrapper"
+            :content-style="wrapperCardContentStyle"
+            size="small"
+            content-scrollable
+            :bordered="false">
+            <n-alert :bordered="false" :show-icon="true" size="small" type="info" style="width: 100%">
+              仅随机战（PvP）对局会被自动保存，其他模式（排位、军团战、剧情等）不会计入记录。
+            </n-alert>
+            <record-card
+              v-for="record in records"
+              :key="record.id"
+              :dmg="recordPrMap[record.id]?.dmg"
+              :frags="recordPrMap[record.id]?.frags"
+              :language="shipNameLanguage"
+              :pr="recordPrMap[record.id]?.pr"
+              :record="record"
+              :ship-info="shipInfoMap[getSelfPlayer(record)?.shipId ?? 0]"
+              :xp="recordPrMap[record.id]?.xp"
+              @click="openDetail"
+              @delete="deleteRecordById" />
+          </n-card>
+        </div>
+      </template>
+      <n-drawer
+        v-model:show="showDetail"
+        :block-scroll="false"
+        :mask-closable="true"
+        :trap-focus="false"
+        placement="right"
+        width="100%">
+        <n-drawer-content :native-scrollbar="false" class="record-detail-drawer" :body-content-style="{ padding: 0 }">
+          <template #header>
+            <n-flex align="center" justify="space-between" style="width: 100%">
+              <n-flex align="center">
+                <n-tag :type="getResultTagType(selectedRecord?.matchResult?.result)">
+                  {{ getResultText(selectedRecord?.matchResult?.result) }}
+                </n-tag>
+                <n-text>{{ selectedRecord?.mapName || '对局详情' }}</n-text>
+              </n-flex>
+              <n-flex align="center">
+                <n-text depth="3" style="font-size: 14px">
+                  {{ selectedRecord?.gameMode }} · {{ selectedRecord?.matchGroup }}
+                </n-text>
+                <n-text depth="3" style="font-size: 14px">
+                  {{ selectedRecord ? formatDate(selectedRecord.dateTime) : '' }}
+                </n-text>
+                <n-button secondary size="small" type="tertiary" @click="showDetail = false">
+                  <template #icon>
+                    <close-outlined />
+                  </template>
+                </n-button>
+              </n-flex>
+            </n-flex>
+          </template>
+          <record-detail-page
+            :ally-ui="allyUI"
+            :enemy-ui="enemyUI"
+            :language="shipNameLanguage"
+            :record="selectedRecord"
+            @close="showDetail = false" />
+        </n-drawer-content>
+      </n-drawer>
+    </template>
   </n-spin>
 </template>
 
 <style scoped>
 .record-page {
-  width: 100%;
-  height: 100%;
-}
-
-.record-page :deep(.n-spin-content) {
   width: 100%;
   height: 100%;
 }
@@ -309,46 +325,25 @@ onUnmounted(() => {
 
 .record-page-content {
   height: 100%;
+  width: 100%;
 }
 
-.record-header {
-  flex-shrink: 0;
-  padding-inline: 16px;
-  padding-top: 16px;
+.record-stat-wrapper {
+  width: 100%;
+  height: var(--mr-record-stat-height);
+  margin-bottom: var(--mr-sub-padding);
 }
 
-.record-stat {
+.record-stat-card {
+  height: 100%;
+  display: flex;
   flex: 1;
-  min-width: 120px;
-}
-
-.record-stat :deep(.n-card-header) {
-  padding-bottom: 4px;
-}
-
-.record-stat :deep(.n-card-content) {
-  padding-top: 0;
 }
 
 .record-list-wrapper {
-  flex: 1;
-  min-height: 0;
-  padding-inline: 16px;
-  padding-bottom: 16px;
-}
-
-.record-card-wrapper {
-  gap: 12px;
-}
-
-.record-card-wrapper :deep(.n-card-content) {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.record-detail-drawer :deep(.n-drawer-body-content-wrapper) {
-  padding: 0;
+  height: calc(
+    100vh - var(--mr-header-height) - var(--mr-main-padding) * 2 - var(--mr-record-stat-height) - var(--mr-sub-padding)
+  );
 }
 
 .stat-font {

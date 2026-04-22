@@ -1,0 +1,12 @@
+:root {
+  /* 全局变量 */
+  --mr-header-height: 48px;
+  --mr-main-padding: 12px;
+  --mr-sub-padding: 8px;
+
+  /* 对局监控模块变量 */
+  --mr-arena-monitor-status-bar-height: 48px;
+
+  /* 对局记录模块变量 */
+  --mr-record-stat-height: 100px;
+}

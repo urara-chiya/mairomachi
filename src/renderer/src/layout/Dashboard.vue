@@ -37,8 +37,8 @@ const handleExit = (): void => {
         查看帮助
       </n-button>
       <n-button class="nav-btn" type="tertiary" ghost @click="handleExit"> 退出 </n-button>
+      <app-footer style="margin-top: auto" />
     </n-flex>
-    <app-footer />
   </n-flex>
 </template>
 
@@ -46,6 +46,7 @@ const handleExit = (): void => {
 .dashboard-page {
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .nav-btn {

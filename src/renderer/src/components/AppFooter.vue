@@ -11,10 +11,6 @@ const appVersion = __APP_VERSION__
 
 <style scoped>
 .app-footer {
-  position: absolute;
-  bottom: 16px;
-  left: 0;
-  right: 0;
   height: 24px;
 }
 </style>

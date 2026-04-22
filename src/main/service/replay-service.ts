@@ -26,38 +26,32 @@ export async function parseReplayFile(filePath: string): Promise<ReplayBattleRep
 }
 
 // ------------------------------------------------------------------------------
-// 数据映射：ReplayLiteReport（snake_case） → ReplayBattleReportResponse（camelCase）
+// 数据映射：ReplayLiteReport → ReplayBattleReportResponse
 // ------------------------------------------------------------------------------
 
 function buildResponse(report: ReplayLiteReport): ReplayBattleReportResponse {
-  const matchResultNode = report.match_result
-  const matchResult = matchResultNode
-    ? {
-        result: matchResultNode.result ?? 'unknown',
-        teamId: matchResultNode.team_id ?? 0
-      }
-    : { result: 'unknown', teamId: 0 }
+  const matchResult = report.matchResult ?? { result: 'unknown', teamId: 0 }
 
   const players = (report.players || []).map((p) => ({
-    accountId: p.account_id,
+    accountId: p.accountId,
     name: p.name,
-    shipId: p.ship_id,
-    teamId: p.team_id,
+    shipId: p.shipId,
+    teamId: p.teamId,
     relation: p.relation,
-    isBot: p.is_bot,
+    isBot: p.isBot,
     damage: p.damage,
     frags: p.frags,
     exp: p.exp ?? 0,
-    rawExp: p.raw_exp ?? 0
+    rawExp: p.rawExp ?? 0
   }))
 
   return {
     matchResult,
-    mapName: formatMapName(report.map_name ?? null) ?? '',
-    gameMode: localizeGameMode(report.game_mode ?? null) ?? '',
-    matchGroup: localizeMatchGroup(report.match_group ?? null) ?? '',
-    rawMatchGroup: report.match_group ?? '',
-    finishType: report.finish_type ?? '',
+    mapName: formatMapName(report.mapName ?? null) ?? '',
+    gameMode: localizeGameMode(report.gameMode ?? null) ?? '',
+    matchGroup: localizeMatchGroup(report.matchGroup ?? null) ?? '',
+    rawMatchGroup: report.matchGroup ?? '',
+    finishType: report.finishType ?? '',
     players
   }
 }
@@ -81,6 +75,7 @@ function formatMapName(raw: string | null): string | null {
 const GAME_MODE_NAMES: Record<string, string> = {
   domination_3point: '制海权',
   domination_4point: '制海权',
+  domination_localweather_3point: '制海权',
   domination: '制海权',
   standard: '标准战斗',
   epicenter: '热点',
@@ -94,6 +89,7 @@ const GAME_MODE_NAMES: Record<string, string> = {
   random: '随机战',
   event: '特殊模式',
   air_defense: '守卫机场',
+  armsrace: '军备竞赛',
   arms_race: '军备竞赛',
   RandomBattle: '随机战',
   RankedBattle: '排位赛',

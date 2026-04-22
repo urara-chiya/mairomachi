@@ -53,8 +53,10 @@ const shipTier = computed(() => props.shipInfo?.tier ?? '-1')
 </template>
 
 <style scoped>
-:deep(.arena-player-card) {
-  min-width: 360px;
+.arena-player-card {
+  min-height: 70px;
+  max-height: 80px;
+  min-width: 520px;
 }
 
 .player-info-wrapper {

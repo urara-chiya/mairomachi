@@ -27,11 +27,11 @@ PR 评级等数据。
 ### 主要页面展示
 
 - 对局监控页面
-![monitor-page.png](image/monitor-page.png)
+  ![monitor-page.png](image/monitor-page.png)
 - 对局记录页面
-![record-page.png](image/record-page.png)
+  ![record-page.png](image/record-page.png)
 - 对局记录详情页面
-![record-detail.png](image/record-detail.png)
+  ![record-detail.png](image/record-detail.png)
 
 ---
 

@@ -28,6 +28,7 @@ export function getResultTagType(result?: string): 'success' | 'error' | 'defaul
 export function getResultText(result?: string): string {
   if (result === 'win') return '胜利'
   if (result === 'loss') return '失败'
+  if (result === 'draw') return '平局'
   return result || '未知'
 }
 

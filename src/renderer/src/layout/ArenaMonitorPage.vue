@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
-import ArenaPlayerCard from '@renderer/components/ArenaPlayerCard.vue'
+import { computed, CSSProperties, onMounted, onUnmounted, reactive, ref } from 'vue'
 import type {
   ArenaInfoRequest,
   ArenaInfoResponse,
@@ -13,7 +12,10 @@ import type {
 import { useAsync } from '@renderer/composables/useAsync'
 import { useMessage } from 'naive-ui'
 import { ReloadOutlined } from '@vicons/antd'
-import ArenaChartsPanel from '@renderer/components/ArenaChartsPanel.vue'
+import TeamRadarChart from '@renderer/components/charts/TeamRadarChart.vue'
+import TeamPrLineChart from '@renderer/components/charts/TeamPrLineChart.vue'
+import TeamPrPieChart from '@renderer/components/charts/TeamPrPieChart.vue'
+import ArenaPlayerCard from '@renderer/components/ArenaPlayerCard.vue'
 
 const message = useMessage()
 
@@ -278,13 +280,25 @@ const recordInfo = computed(() => {
       return { label: '等待对局', color: '#888', blink: false }
   }
 })
+
+const wrapperCardContentStyle: CSSProperties = {
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  alignItems: 'center'
+}
 </script>
 
 <template>
-  <n-spin :show="isFetchingArena" class="arena-monitor-page" description="正在加载对局数据...">
+  <n-spin
+    :show="isFetchingArena"
+    class="arena-monitor-page"
+    :content-style="{ height: '100%', width: '100%' }"
+    description="正在加载对局数据...">
     <template #default>
       <!-- 配置未就绪提示 -->
-      <n-flex v-if="!isMonitorReady" align="center" justify="center" style="flex: 1">
+      <n-flex v-if="!isMonitorReady" class="arena-empty-wrapper" align="center" justify="center">
         <n-empty description="请在“设置”中配置游戏路径并开启自动监控" size="large">
           <template #extra>
             <n-text depth="3">未检测到有效的对局监控配置</n-text>
@@ -295,9 +309,9 @@ const recordInfo = computed(() => {
       <!-- 未检测到对局 -->
       <n-flex
         v-else-if="players.allies.length <= 0 && players.enemies.length <= 0"
+        class="arena-empty-wrapper"
         align="center"
-        justify="center"
-        style="flex: 1">
+        justify="center">
         <n-empty description="当前未检测到对局" size="large">
           <template #extra>
             <n-text depth="3">等待对局开始...</n-text>
@@ -305,63 +319,94 @@ const recordInfo = computed(() => {
         </n-empty>
       </n-flex>
 
-      <!-- 数据和图表 -->
       <template v-else>
-        <!-- 状态栏 -->
-        <n-flex :size="8" class="team-list-area">
-          <n-card :bordered="false" class="player-card-wrapper" content-scrollable embedded size="small">
-            <arena-player-card
-              v-for="p in players.allies"
-              :key="p.playerId"
-              :direction="uiConfig.allyUI"
-              :info="p"
-              :language="uiConfig.shipNameLanguage"
-              :ship-info="p.shipInfo" />
-          </n-card>
-          <n-card :bordered="false" class="player-card-wrapper" content-scrollable embedded size="small">
-            <arena-player-card
-              v-for="p in players.enemies"
-              :key="p.playerId"
-              :direction="uiConfig.enemyUI"
-              :info="p"
-              :language="uiConfig.shipNameLanguage"
-              :ship-info="p.shipInfo" />
-          </n-card>
-          <n-flex vertical>
-            <n-card :bordered="false" class="arena-status-bar" embedded size="small">
-              <n-flex align="center" justify="space-between">
-                <n-space size="small">
-                  <span :style="{ backgroundColor: sourceInfo.color }" class="status-dot" />
-                  <n-text depth="3" style="font-size: 12px">{{ sourceInfo.label }}</n-text>
-                </n-space>
-                <n-space size="small">
-                  <span
-                    :class="{ 'status-blink': recordInfo.blink }"
-                    :style="{ backgroundColor: recordInfo.color }"
-                    class="status-dot" />
-                  <n-text depth="3" style="font-size: 12px">{{ recordInfo.label }}</n-text>
-                </n-space>
-                <n-button
-                  :disabled="!isMonitorReady"
-                  :loading="isRefreshing"
-                  quaternary
-                  size="tiny"
-                  @click="handleRefreshArena">
-                  <template #icon>
-                    <n-icon><reload-outlined /></n-icon>
-                  </template>
-                  刷新对局
-                </n-button>
-              </n-flex>
+        <n-grid class="arena-monitor-content" :x-gap="8" :cols="8">
+          <n-grid-item :span="3">
+            <n-card
+              class="player-list-wrapper"
+              :content-style="wrapperCardContentStyle"
+              size="small"
+              content-scrollable
+              :bordered="false">
+              <arena-player-card
+                v-for="p in players.allies"
+                :key="p.playerId"
+                class="arena-monitor-page-player-card"
+                :direction="uiConfig.allyUI"
+                :info="p"
+                :language="uiConfig.shipNameLanguage"
+                :ship-info="p.shipInfo" />
             </n-card>
-            <n-card :bordered="false" class="chart-area" content-scrollable embedded size="small">
-              <arena-charts-panel
-                :allies="players.allies"
-                :enemies="players.enemies"
-                :language="uiConfig.shipNameLanguage" />
+          </n-grid-item>
+          <n-grid-item :span="3">
+            <n-card
+              class="player-list-wrapper"
+              :content-style="wrapperCardContentStyle"
+              size="small"
+              content-scrollable
+              :bordered="false">
+              <arena-player-card
+                v-for="p in players.enemies"
+                :key="p.playerId"
+                :direction="uiConfig.enemyUI"
+                :info="p"
+                :language="uiConfig.shipNameLanguage"
+                :ship-info="p.shipInfo" />
             </n-card>
-          </n-flex>
-        </n-flex>
+          </n-grid-item>
+          <n-grid-item :span="2">
+            <div class="sider-wrapper">
+              <n-card class="sider-status-bar-wrapper" size="small" :bordered="false">
+                <n-flex class="sider-status-bar" align="center" justify="space-between">
+                  <n-space size="small">
+                    <span :style="{ backgroundColor: sourceInfo.color }" class="status-dot" />
+                    <n-text depth="3" style="font-size: 12px">{{ sourceInfo.label }}</n-text>
+                  </n-space>
+                  <n-space size="small">
+                    <span
+                      :class="{ 'status-blink': recordInfo.blink }"
+                      :style="{ backgroundColor: recordInfo.color }"
+                      class="status-dot" />
+                    <n-text depth="3" style="font-size: 12px">{{ recordInfo.label }}</n-text>
+                  </n-space>
+                  <n-button
+                    :disabled="!isMonitorReady"
+                    :loading="isRefreshing"
+                    quaternary
+                    size="tiny"
+                    @click="handleRefreshArena">
+                    <template #icon>
+                      <n-icon><reload-outlined /></n-icon>
+                    </template>
+                    刷新对局
+                  </n-button>
+                </n-flex>
+              </n-card>
+              <n-card
+                class="sider-charts-wrapper"
+                :content-style="wrapperCardContentStyle"
+                size="small"
+                content-scrollable
+                :bordered="false">
+                <team-radar-chart
+                  class="arena-monitor-chart"
+                  :allies="players.allies"
+                  :enemies="players.enemies"
+                  :language="uiConfig.shipNameLanguage" />
+                <team-pr-line-chart
+                  class="arena-monitor-chart"
+                  :allies="players.allies"
+                  :enemies="players.enemies"
+                  :language="uiConfig.shipNameLanguage" />
+                <team-pr-pie-chart
+                  class="arena-monitor-chart pie-chart"
+                  :allies="players.allies"
+                  :enemies="players.enemies"
+                  :language="uiConfig.shipNameLanguage" />
+              </n-card>
+            </div>
+          </n-grid-item>
+        </n-grid>
       </template>
     </template>
   </n-spin>
@@ -369,46 +414,49 @@ const recordInfo = computed(() => {
 
 <style scoped>
 .arena-monitor-page {
-  display: flex;
   width: 100%;
   height: 100%;
 }
 
-:deep(.n-spin-content) {
-  display: flex;
+.arena-empty-wrapper {
   width: 100%;
   height: 100%;
 }
 
-.team-list-area {
-  padding: 8px;
+.arena-monitor-content {
+  height: 100%;
+  width: 100%;
+}
+
+.player-list-wrapper {
+  height: calc(100vh - var(--mr-header-height) - var(--mr-main-padding) * 2);
+}
+
+.arena-monitor-page-player-card {
+  display: flex;
   flex: 1;
 }
 
-.player-card-wrapper {
+.sider-wrapper {
+  height: calc(100vh - var(--mr-header-height) - var(--mr-main-padding) * 2);
+}
+
+.sider-status-bar {
   height: 100%;
-  flex: 1;
-}
-
-.player-card-wrapper :deep(.n-card-content) {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chart-area {
-  width: 420px;
-  height: 100%;
-}
-
-.chart-area :deep(.n-card-content) {
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-.arena-status-bar {
+.sider-charts-wrapper {
+  height: calc(
+    100vh - var(--mr-header-height) - var(--mr-main-padding) * 2 - var(--mr-arena-monitor-status-bar-height) -
+      var(--mr-sub-padding)
+  );
+}
+
+.sider-status-bar-wrapper {
+  height: var(--mr-arena-monitor-status-bar-height);
+  width: 100%;
+  margin-bottom: var(--mr-sub-padding);
 }
 
 .status-dot {
@@ -430,5 +478,15 @@ const recordInfo = computed(() => {
   50% {
     opacity: 0.3;
   }
+}
+.arena-monitor-chart {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.pie-chart {
+  flex: 0;
+  height: 240px;
 }
 </style>

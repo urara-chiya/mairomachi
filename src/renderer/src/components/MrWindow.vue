@@ -107,7 +107,7 @@ onUnmounted(() => {
         </n-space>
       </n-flex>
     </n-layout-header>
-    <n-layout-content class="main">
+    <n-layout-content class="main" :content-style="{ padding: '12px' }">
       <Transition mode="out-in" name="page-fade">
         <component :is="currentPage.component" :key="currentPage.name" v-bind="pageProps" @channel="handleChannel" />
       </Transition>
@@ -159,6 +159,7 @@ onUnmounted(() => {
   height: calc(100% - 48px);
   width: 100%;
 }
+
 .settings-content {
   height: 720px;
   width: 640px;
