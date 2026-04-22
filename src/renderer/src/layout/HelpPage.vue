@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item content="初版发布。" time="2026-04-20" title="v1.0.0" type="success" />
+            <n-timeline-item
+              content="replay解析算法优化；对局胜负判定优化；对局监控、对局记录UI优化。"
+              time="2026-04-22"
+              title="v1.1.0"
+              type="success" />
           </n-timeline>
         </n-flex>
       </n-scrollbar>
