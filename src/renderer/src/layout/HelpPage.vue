@@ -232,6 +232,7 @@ const activeMenuKey = ref<string>('intro')
               time="2026-04-22"
               title="v1.1.0"
               type="success" />
+            <n-timeline-item content="新增隐藏玩家ID设置。" time="2026-04-23" title="v1.2.0" type="success" />
           </n-timeline>
         </n-flex>
       </n-scrollbar>

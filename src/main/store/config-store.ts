@@ -17,7 +17,8 @@ const DEFAULT: AppConfigs['app'] = {
     theme: 'dark',
     allyUI: 'ltr',
     enemyUI: 'rtl',
-    shipNameLanguage: 'zh-cn'
+    shipNameLanguage: 'zh-cn',
+    hidePlayerId: false
   },
   arenaMonitor: {
     gamePath: '',
@@ -48,6 +49,13 @@ export function getConfig(): AppConfigs['app'] {
    */
   if (!saved.record) {
     saved.record = { enableAutoRecord: false, cacheDays: 30 }
+    store.set('config', saved)
+  }
+  /**
+   * @remarks 兼容旧版本配置：补全缺失的 ui.hidePlayerId 字段
+   */
+  if (saved.ui && typeof saved.ui.hidePlayerId !== 'boolean') {
+    saved.ui.hidePlayerId = false
     store.set('config', saved)
   }
   return saved

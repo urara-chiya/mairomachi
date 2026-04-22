@@ -16,6 +16,7 @@ const props = defineProps<{
   language: ShipLanguageKey
   allyUi: 'ltr' | 'rtl'
   enemyUi: 'ltr' | 'rtl'
+  hidePlayerId?: boolean
 }>()
 
 defineEmits<{
@@ -128,19 +129,23 @@ const enemies = computed(
     <n-flex :size="0" class="team-list-area">
       <n-card :bordered="false" class="team-list-card" embedded size="small">
         <record-player-card
-          v-for="p in allies"
+          v-for="(p, i) in allies"
           :key="p.accountId"
           :direction="allyUi"
+          :hide-player-name="hidePlayerId"
           :language="language"
-          :player="p" />
+          :player="p"
+          :player-index="i + 1" />
       </n-card>
       <n-card v-show="enemies.length > 0" :bordered="false" class="team-list-card" embedded size="small">
         <record-player-card
-          v-for="p in enemies"
+          v-for="(p, i) in enemies"
           :key="p.accountId"
           :direction="enemyUi"
+          :hide-player-name="hidePlayerId"
           :language="language"
-          :player="p" />
+          :player="p"
+          :player-index="i + 1" />
       </n-card>
     </n-flex>
   </n-spin>

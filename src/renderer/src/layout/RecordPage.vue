@@ -35,6 +35,7 @@ const showDetail = ref(false)
 const shipNameLanguage = ref<ShipLanguageKey>('zh-cn')
 const allyUI = ref<'ltr' | 'rtl'>('ltr')
 const enemyUI = ref<'ltr' | 'rtl'>('rtl')
+const hidePlayerId = ref(false)
 const stats = ref<RecordStatsResponse | null>(null)
 const recordPrMap = ref<Record<string, RecordBatchPrResponse>>({})
 const shipInfoMap = ref<Record<number, ShipInfoDetail>>({})
@@ -171,6 +172,7 @@ onMounted(async () => {
   shipNameLanguage.value = config.ui.shipNameLanguage
   allyUI.value = config.ui.allyUI
   enemyUI.value = config.ui.enemyUI
+  hidePlayerId.value = config.ui.hidePlayerId
   await loadRecords()
   await loadStats()
   await loadBatchPr()
@@ -182,6 +184,7 @@ onMounted(async () => {
     shipNameLanguage.value = cfg.ui.shipNameLanguage
     allyUI.value = cfg.ui.allyUI
     enemyUI.value = cfg.ui.enemyUI
+    hidePlayerId.value = cfg.ui.hidePlayerId
   })
 })
 
@@ -303,6 +306,7 @@ const wrapperCardContentStyle: CSSProperties = {
           <record-detail-page
             :ally-ui="allyUI"
             :enemy-ui="enemyUI"
+            :hide-player-id="hidePlayerId"
             :language="shipNameLanguage"
             :record="selectedRecord"
             @close="showDetail = false" />

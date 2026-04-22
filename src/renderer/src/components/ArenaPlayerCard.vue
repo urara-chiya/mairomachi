@@ -13,6 +13,8 @@ const props = defineProps<{
   shipInfo: ShipInfoDetail | undefined
   language: ShipLanguageKey
   direction: 'ltr' | 'rtl'
+  playerIndex?: number
+  hidePlayerName?: boolean
 }>()
 
 const reverse = computed(() => props.direction === 'rtl')
@@ -30,7 +32,9 @@ const shipTier = computed(() => props.shipInfo?.tier ?? '-1')
           :clan-tag="info.clanTag"
           :clan-tag-color="info.clanTagColor"
           :name="info.playerName"
-          :reverse="reverse" />
+          :reverse="reverse"
+          :player-index="playerIndex"
+          :hide-player-name="hidePlayerName" />
         <ship-name-card :name="shipName" :reverse="!reverse" :tier="shipTier" :type="shipType" />
       </n-flex>
       <n-flex :reverse="reverse" align="center" justify="space-between">

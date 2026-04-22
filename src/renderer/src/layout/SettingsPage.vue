@@ -37,7 +37,8 @@ const settingsForm = reactive<AppConfigs['app']>({
     theme: 'dark',
     allyUI: 'ltr',
     enemyUI: 'rtl',
-    shipNameLanguage: 'zh-cn'
+    shipNameLanguage: 'zh-cn',
+    hidePlayerId: false
   },
   arenaMonitor: {
     gamePath: '',
@@ -61,7 +62,8 @@ const uiRules: Record<keyof AppConfigs['ui'], FormItemRule> = {
   theme: enumRule(['light', 'dark'], '主题不能这样配置>_<'),
   allyUI: enumRule(['ltr', 'rtl'], 'UI方向不能这样配置>_<'),
   enemyUI: enumRule(['ltr', 'rtl'], 'UI方向不能这样配置>_<'),
-  shipNameLanguage: enumRule(['zh-cn', 'zh-tw', 'en', 'ja'], '舰船名称语言配置不正确>_<')
+  shipNameLanguage: enumRule(['zh-cn', 'zh-tw', 'en', 'ja'], '舰船名称语言配置不正确>_<'),
+  hidePlayerId: {}
 }
 
 const arenaMonitorRules: Record<keyof AppConfigs['arena-monitor'], FormItemRule> = {
@@ -313,6 +315,9 @@ onBeforeUnmount(() => {
           </n-form-item>
           <n-form-item label="舰船名称语言" path="shipNameLanguage">
             <n-select v-model:value="settingsForm.ui.shipNameLanguage" :options="shipNameLanguageOptions" />
+          </n-form-item>
+          <n-form-item label="隐藏玩家ID" path="hidePlayerId">
+            <n-switch v-model:value="settingsForm.ui.hidePlayerId" />
           </n-form-item>
         </n-form>
         <n-form

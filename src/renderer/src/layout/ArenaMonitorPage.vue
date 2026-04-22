@@ -127,7 +127,8 @@ const uiConfig = reactive<UIConfig>({
   theme: 'dark',
   allyUI: 'ltr',
   enemyUI: 'rtl',
-  shipNameLanguage: 'zh-cn'
+  shipNameLanguage: 'zh-cn',
+  hidePlayerId: false
 })
 
 const players = reactive<{
@@ -146,6 +147,7 @@ const { execute: loadUiConfig } = useAsync({
     uiConfig.enemyUI = ui.enemyUI
     uiConfig.shipNameLanguage = ui.shipNameLanguage
     uiConfig.theme = ui.theme
+    uiConfig.hidePlayerId = ui.hidePlayerId
     return ui
   },
   onError: () => {
@@ -243,6 +245,7 @@ onMounted(async () => {
     uiConfig.enemyUI = config.ui.enemyUI
     uiConfig.shipNameLanguage = config.ui.shipNameLanguage
     uiConfig.theme = config.ui.theme
+    uiConfig.hidePlayerId = config.ui.hidePlayerId
   })
 })
 
@@ -329,12 +332,14 @@ const wrapperCardContentStyle: CSSProperties = {
               content-scrollable
               :bordered="false">
               <arena-player-card
-                v-for="p in players.allies"
+                v-for="(p, i) in players.allies"
                 :key="p.playerId"
                 class="arena-monitor-page-player-card"
                 :direction="uiConfig.allyUI"
+                :hide-player-name="uiConfig.hidePlayerId"
                 :info="p"
                 :language="uiConfig.shipNameLanguage"
+                :player-index="i + 1"
                 :ship-info="p.shipInfo" />
             </n-card>
           </n-grid-item>
@@ -346,11 +351,13 @@ const wrapperCardContentStyle: CSSProperties = {
               content-scrollable
               :bordered="false">
               <arena-player-card
-                v-for="p in players.enemies"
+                v-for="(p, i) in players.enemies"
                 :key="p.playerId"
                 :direction="uiConfig.enemyUI"
+                :hide-player-name="uiConfig.hidePlayerId"
                 :info="p"
                 :language="uiConfig.shipNameLanguage"
+                :player-index="i + 1"
                 :ship-info="p.shipInfo" />
             </n-card>
           </n-grid-item>

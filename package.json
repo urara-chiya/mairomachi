@@ -1,10 +1,10 @@
 {
   "name": "mairomachi",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "World of Warships查询小帮手",
   "main": "./out/main/index.js",
   "author": "2274835706@qq.com",
-  "homepage": "https://electron-vite.org",
+  "homepage": "https://github.com/urara-chiya/mairomachi",
   "type": "module",
   "scripts": {
     "format": "prettier --write .",

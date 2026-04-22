@@ -12,7 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
-    ArenaChartsPanel: typeof import('./src/components/ArenaChartsPanel.vue')['default']
     ArenaPlayerCard: typeof import('./src/components/ArenaPlayerCard.vue')['default']
     ArenaPlayerStat: typeof import('./src/components/ArenaPlayerStat.vue')['default']
     AuthorDisclaimer: typeof import('./src/components/AuthorDisclaimer.vue')['default']
@@ -34,7 +33,6 @@ declare module 'vue' {
     NFlex: typeof import('naive-ui')['NFlex']
     NForm: typeof import('naive-ui')['NForm']
     NFormItem: typeof import('naive-ui')['NFormItem']
-    NGi: typeof import('naive-ui')['NGi']
     NGradientText: typeof import('naive-ui')['NGradientText']
     NGrid: typeof import('naive-ui')['NGrid']
     NGridItem: typeof import('naive-ui')['NGridItem']

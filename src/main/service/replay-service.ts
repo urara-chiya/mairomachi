@@ -30,17 +30,14 @@ export async function parseReplayFile(filePath: string): Promise<ReplayBattleRep
 // ------------------------------------------------------------------------------
 
 function buildResponse(report: ReplayLiteReport): ReplayBattleReportResponse {
-  const matchResult = report.matchResult ?? { result: 'unknown', teamId: 0 }
+  const matchResult = {
+    result: report.matchResult?.result ?? 'unknown',
+    teamId: report.matchResult?.teamId ?? 0,
+    inferred: report.matchResult?.inferred
+  }
 
   const players = (report.players || []).map((p) => ({
-    accountId: p.accountId,
-    name: p.name,
-    shipId: p.shipId,
-    teamId: p.teamId,
-    relation: p.relation,
-    isBot: p.isBot,
-    damage: p.damage,
-    frags: p.frags,
+    ...p,
     exp: p.exp ?? 0,
     rawExp: p.rawExp ?? 0
   }))

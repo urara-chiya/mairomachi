@@ -33,6 +33,8 @@ export interface UIConfig {
   enemyUI: 'ltr' | 'rtl'
   /** 舰船名称显示语言 */
   shipNameLanguage: 'zh-cn' | 'zh-tw' | 'en' | 'ja'
+  /** 是否隐藏玩家 ID（开启后以 Player-XX 占位符显示） */
+  hidePlayerId: boolean
 }
 
 /** 完整应用配置 */
