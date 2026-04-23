@@ -286,10 +286,10 @@ const recordInfo = computed(() => {
 
 const wrapperCardContentStyle: CSSProperties = {
   height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
+  display: 'grid',
+  gridAutoRows: 'minmax(70px, 1fr)',
   gap: '8px',
-  alignItems: 'center'
+  alignItems: 'stretch'
 }
 </script>
 

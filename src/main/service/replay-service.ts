@@ -70,41 +70,14 @@ function formatMapName(raw: string | null): string | null {
 }
 
 const GAME_MODE_NAMES: Record<string, string> = {
+  domination_2point: '标准战斗',
   domination_3point: '制海权',
   domination_4point: '制海权',
   domination_localweather_3point: '制海权',
-  domination: '制海权',
-  standard: '标准战斗',
-  epicenter: '热点',
-  assault: '突袭',
-  scenario: '剧情',
-  training: '训练房',
-  clan: '军团战',
-  ranked: '排位赛',
-  brawl: '对决',
-  cooperative: '联合作战',
-  random: '随机战',
-  event: '特殊模式',
-  air_defense: '守卫机场',
-  armsrace: '军备竞赛',
-  arms_race: '军备竞赛',
-  RandomBattle: '随机战',
-  RankedBattle: '排位赛',
-  ClanBattle: '军团战',
-  CooperativeBattle: '联合作战',
-  BrawlBattle: '对决',
-  TrainingBattle: '训练房',
-  EventBattle: '特殊模式'
+  armsrace: '军备竞赛'
 }
 
 const MATCH_GROUP_NAMES: Record<string, string> = {
-  random: '随机战',
-  ranked: '排位赛',
-  clan: '军团战',
-  cooperative: '联合作战',
-  brawl: '对决',
-  training: '训练房',
-  event: '特殊模式',
   pvp: '随机战'
 }
 

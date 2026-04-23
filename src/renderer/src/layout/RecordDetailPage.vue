@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
+import { computed, CSSProperties, ref, watch } from 'vue'
 import type {
   ArenaPlayerStatItem,
   BattleRecord,
@@ -122,12 +122,18 @@ const enemies = computed(
       .map(assemblePlayer)
       .sort(sortByExpDesc) ?? []
 )
+
+const teamListContentStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px'
+}
 </script>
 
 <template>
   <n-spin :show="loading" description="正在计算对局数据...">
     <n-flex :size="0" class="team-list-area">
-      <n-card :bordered="false" class="team-list-card" embedded size="small">
+      <n-card class="team-list-card" :content-style="teamListContentStyle" embedded size="small" :bordered="false">
         <record-player-card
           v-for="(p, i) in allies"
           :key="p.accountId"
@@ -137,7 +143,7 @@ const enemies = computed(
           :player="p"
           :player-index="i + 1" />
       </n-card>
-      <n-card v-show="enemies.length > 0" :bordered="false" class="team-list-card" embedded size="small">
+      <n-card class="team-list-card" :content-style="teamListContentStyle" embedded size="small" :bordered="false">
         <record-player-card
           v-for="(p, i) in enemies"
           :key="p.accountId"
@@ -159,11 +165,5 @@ const enemies = computed(
 .team-list-card {
   height: 100%;
   flex: 1;
-}
-
-.team-list-card :deep(.n-card-content) {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 </style>
