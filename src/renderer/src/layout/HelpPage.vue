@@ -226,13 +226,18 @@ const activeMenuKey = ref<string>('intro')
           <n-h1>更新日志</n-h1>
 
           <n-timeline>
-            <n-timeline-item content="初版发布。" time="2026-04-20" title="v1.0.0" type="success" />
+            <n-timeline-item
+              content="优化UI，修复对局监控页面玩家列表错位的bug。"
+              time="2026-04-23"
+              title="v1.2.1"
+              type="success" />
+            <n-timeline-item content="新增隐藏玩家ID设置。" time="2026-04-23" title="v1.2.0" type="success" />
             <n-timeline-item
               content="replay解析算法优化；对局胜负判定优化；对局监控、对局记录UI优化。"
               time="2026-04-22"
               title="v1.1.0"
               type="success" />
-            <n-timeline-item content="新增隐藏玩家ID设置。" time="2026-04-23" title="v1.2.0" type="success" />
+            <n-timeline-item content="初版发布。" time="2026-04-20" title="v1.0.0" type="success" />
           </n-timeline>
         </n-flex>
       </n-scrollbar>
