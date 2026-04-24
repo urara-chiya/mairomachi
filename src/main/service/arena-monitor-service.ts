@@ -2,9 +2,10 @@ import chokidar, { FSWatcher } from 'chokidar'
 import path from 'node:path'
 import fs from 'node:fs'
 import { BrowserWindow } from 'electron'
-import { FileArenaInfo } from '../type'
+import { BattleRecord, FileArenaInfo } from '../type'
 import { getArenaMonitorConfig, getRecordConfig, saveRecord } from '../store'
 import { parseReplayFile } from './replay-service'
+import { enrichBattleRecord } from './record-service'
 import { notifyArenaDetected, notifyArenaEnded, notifyArenaRecordStatus, sendToast } from '../utils/ipc-sender'
 import { setMainWindow } from '../utils/window-state'
 import { resolveAndValidateGamePath, scanReplayFiles } from '../utils/replay-files'
@@ -54,6 +55,8 @@ export class ArenaMonitor implements ArenaMonitorController {
 
   /** 已解析过的 replay 文件路径，防止重复解析（最多保留最近 50 条） */
   private parsedReplayPaths = new LRUSet<string>(50)
+  /** 正在处理中的 replay 文件路径，防止异步并发导致重复解析 */
+  private processingPaths = new Set<string>()
   /** 监控器就绪时间戳，只处理在此时间之后修改的 replay */
   private watchReadyTime = 0
 
@@ -159,6 +162,7 @@ export class ArenaMonitor implements ArenaMonitorController {
     this.watcher = null
     this.lastArenaContent = null
     this.parsedReplayPaths.clear()
+    this.processingPaths.clear()
     this.watchReadyTime = 0
     logger.debug('ArenaMonitor', 'Watcher cleaned up')
 
@@ -203,10 +207,12 @@ export class ArenaMonitor implements ArenaMonitorController {
       return
     }
 
-    if (this.parsedReplayPaths.has(filePath)) {
-      logger.debug('ArenaMonitor', `Replay already parsed, skipping: ${filePath}`)
+    if (this.parsedReplayPaths.has(filePath) || this.processingPaths.has(filePath)) {
+      logger.debug('ArenaMonitor', `Replay already parsed or processing, skipping: ${filePath}`)
       return
     }
+
+    this.processingPaths.add(filePath)
 
     const monitorConfig = getArenaMonitorConfig()
     const realm = monitorConfig.realm ?? 'ASIA'
@@ -238,13 +244,15 @@ export class ArenaMonitor implements ArenaMonitorController {
         return
       }
 
-      const record = {
+      let record: BattleRecord = {
         ...report,
         id: `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
         dateTime: new Date().toISOString(),
         realm,
         replayPath: filePath
       }
+
+      record = await enrichBattleRecord(record)
 
       saveRecord(record)
       this.parsedReplayPaths.add(filePath)
@@ -253,6 +261,8 @@ export class ArenaMonitor implements ArenaMonitorController {
       notifyArenaRecordStatus('saved')
     } catch (error) {
       logger.error('ArenaMonitor', 'Failed to parse new replay', error)
+    } finally {
+      this.processingPaths.delete(filePath)
     }
   }
 

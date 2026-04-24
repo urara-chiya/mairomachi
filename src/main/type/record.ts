@@ -1,4 +1,9 @@
-import { ReplayBattleReportResponse, ReplayPlayerBattleReport } from './replay'
+import {
+  RecordClanInfoResponse,
+  RecordDetailPlayerResponse,
+  ReplayBattleReportResponse,
+  ReplayPlayerBattleReport
+} from './replay'
 import { Realm } from './http'
 
 /**
@@ -20,4 +25,8 @@ export interface BattleRecord extends ReplayBattleReportResponse {
   replayPath: string
   /** 当前玩家自身的战斗报告（从 players 中提取） */
   self?: ReplayPlayerBattleReport
+  /** 后端预计算的玩家详情数据（PR、伤害等级、击杀等级等） */
+  enrichedPlayers?: RecordDetailPlayerResponse[]
+  /** 后端预计算的玩家公会信息 */
+  enrichedClanInfos?: RecordClanInfoResponse[]
 }

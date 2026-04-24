@@ -119,8 +119,8 @@ export interface RecordStatsResponse {
   totalBattles: number
   winRate: number
   avgDamage: number
-  avgPr: number
-  prColor: string
+  overallPr: number
+  overallPrColor: string
   winRateColor: string
   avgDamageColor: string
 }

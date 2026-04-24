@@ -41,6 +41,38 @@ export function removeRecord(id: string): void {
   deleteRecord(id)
 }
 
+/**
+ * 向后端请求 enrich 数据（PR、伤害等级、公会信息等）并合并到记录中。
+ * 失败时返回原始记录，不影响主流程。
+ */
+export async function enrichBattleRecord(record: BattleRecord): Promise<BattleRecord> {
+  try {
+    const accountIds = record.players.map((p) => p.accountId)
+    const [detailPlayers, clanInfos] = await Promise.all([
+      fetchRecordDetail({
+        matchResult: record.matchResult,
+        players: record.players
+      }),
+      fetchClanInfo({ accountIds, realm: record.realm })
+    ])
+
+    if (detailPlayers.length > 0) {
+      record.enrichedPlayers = detailPlayers
+    }
+    if (clanInfos.length > 0) {
+      record.enrichedClanInfos = clanInfos
+    }
+
+    logger.info(
+      'RecordService',
+      `Enriched record ${record.id}: ${detailPlayers.length} players, ${clanInfos.length} clans`
+    )
+  } catch (error) {
+    logger.warn('RecordService', `Failed to enrich record ${record.id}, saving raw data`, error)
+  }
+  return record
+}
+
 export async function parseAndSaveLatestReplay(realm: Realm): Promise<BattleRecord | null> {
   const monitorConfig = getArenaMonitorConfig()
   const gamePath = monitorConfig.gamePath
@@ -67,7 +99,7 @@ export async function parseAndSaveLatestReplay(realm: Realm): Promise<BattleReco
     return null
   }
 
-  const record: BattleRecord = {
+  let record: BattleRecord = {
     ...report,
     id: `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
     dateTime: new Date().toISOString(),
@@ -75,6 +107,9 @@ export async function parseAndSaveLatestReplay(realm: Realm): Promise<BattleReco
     replayPath,
     self: report.players.find((p) => p.relation === 'Self')
   }
+
+  // 尝试向后端请求 enrich 数据，失败不影响保存
+  record = await enrichBattleRecord(record)
 
   saveRecord(record)
   logger.info('RecordService', `Battle record saved: ${record.id}`)
@@ -105,10 +140,10 @@ export async function fetchRecordStats(request: RecordStatsItem[]): Promise<Reco
     result.data ?? {
       winRate: 0,
       avgDamage: 0,
-      avgPr: 0,
+      overallPr: 0,
       winRateColor: '',
       avgDamageColor: '',
-      prColor: ''
+      overallPrColor: ''
     }
   )
 }
@@ -116,7 +151,7 @@ export async function fetchRecordStats(request: RecordStatsItem[]): Promise<Reco
 export async function fetchBatchPr(request: RecordBatchPrItem[]): Promise<RecordBatchPrResponse[]> {
   logger.info('RecordService', 'Fetching batch PR')
   const result = await mairoClient.post<RecordBatchPrItem[], MairoResult<RecordBatchPrResponse[]>>(
-    import.meta.env.VITE_API_ENDPOINT_RECORD_BATCH_PR,
+    import.meta.env.VITE_API_ENDPOINT_RECORD_EVALUATE,
     request
   )
   return result.data ?? []

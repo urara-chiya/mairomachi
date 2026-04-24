@@ -200,8 +200,7 @@ const wrapperCardContentStyle: CSSProperties = {
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
-  alignItems: 'center'
+  gap: '8px'
 }
 </script>
 
@@ -245,7 +244,7 @@ const wrapperCardContentStyle: CSSProperties = {
               <n-text :style="{ color: stats?.avgDamageColor }" class="stat-font">{{ stats?.avgDamage ?? 0 }}</n-text>
             </n-card>
             <n-card class="record-stat-card" size="small" title="PR">
-              <n-text :style="{ color: stats?.prColor }" class="stat-font">{{ stats?.avgPr ?? 0 }}</n-text>
+              <n-text :style="{ color: stats?.overallPrColor }" class="stat-font">{{ stats?.overallPr ?? 0 }}</n-text>
             </n-card>
           </n-flex>
           <n-card

@@ -103,6 +103,8 @@ const handleDelete = (e: MouseEvent): void => {
 <style scoped>
 .record-card {
   height: 80px;
+  min-height: 80px;
+  max-height: 80px;
   min-width: 520px;
   cursor: pointer;
 }

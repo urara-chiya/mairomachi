@@ -52,38 +52,64 @@ watch(
     loading.value = true
     try {
       const shipIds = record.players.map((p) => p.shipId)
-      const accountIds = record.players.map((p) => p.accountId)
-      const [shipMap, detailPlayers, clanInfos] = await Promise.all([
-        window.ipc.ship.getByIds(shipIds),
-        window.ipc.record.getDetail({
+      const shipMap = await window.ipc.ship.getByIds(shipIds)
+      shipInfoMap.value = shipMap
+
+      // 优先使用本地预计算的 enrich 数据
+      if (record.enrichedPlayers && record.enrichedPlayers.length > 0) {
+        enrichedPlayers.value = record.enrichedPlayers.reduce(
+          (acc, p) => {
+            acc[p.accountId] = {
+              pr: p.pr,
+              dmg: p.dmg,
+              fragsLevel: p.fragsLevel,
+              xpLevel: p.xpLevel
+            }
+            return acc
+          },
+          {} as typeof enrichedPlayers.value
+        )
+      } else {
+        const detailPlayers = await window.ipc.record.getDetail({
           matchResult: JSON.parse(JSON.stringify(record.matchResult)),
           players: JSON.parse(JSON.stringify(record.players))
-        }),
-        window.ipc.record.getClanInfo({
+        })
+        enrichedPlayers.value = detailPlayers.reduce(
+          (acc, p) => {
+            acc[p.accountId] = {
+              pr: p.pr,
+              dmg: p.dmg,
+              fragsLevel: p.fragsLevel,
+              xpLevel: p.xpLevel
+            }
+            return acc
+          },
+          {} as typeof enrichedPlayers.value
+        )
+      }
+
+      if (record.enrichedClanInfos && record.enrichedClanInfos.length > 0) {
+        clanInfoMap.value = record.enrichedClanInfos.reduce(
+          (acc, c) => {
+            acc[c.accountId] = c
+            return acc
+          },
+          {} as Record<number, RecordClanInfoResponse>
+        )
+      } else {
+        const accountIds = record.players.map((p) => p.accountId)
+        const clanInfos = await window.ipc.record.getClanInfo({
           accountIds,
           realm: record.realm
         })
-      ])
-      shipInfoMap.value = shipMap
-      enrichedPlayers.value = detailPlayers.reduce(
-        (acc, p) => {
-          acc[p.accountId] = {
-            pr: p.pr,
-            dmg: p.dmg,
-            fragsLevel: p.fragsLevel,
-            xpLevel: p.xpLevel
-          }
-          return acc
-        },
-        {} as typeof enrichedPlayers.value
-      )
-      clanInfoMap.value = clanInfos.reduce(
-        (acc, c) => {
-          acc[c.accountId] = c
-          return acc
-        },
-        {} as Record<number, RecordClanInfoResponse>
-      )
+        clanInfoMap.value = clanInfos.reduce(
+          (acc, c) => {
+            acc[c.accountId] = c
+            return acc
+          },
+          {} as Record<number, RecordClanInfoResponse>
+        )
+      }
     } catch {
       message.error('对局详情加载失败了>_<')
     } finally {

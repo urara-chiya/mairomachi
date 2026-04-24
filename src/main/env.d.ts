@@ -14,7 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_API_ENDPOINT_INFO_SHIPS_VERSION: string
   readonly VITE_API_ENDPOINT_RECORD_DETAIL: string
   readonly VITE_API_ENDPOINT_RECORD_STATS: string
-  readonly VITE_API_ENDPOINT_RECORD_BATCH_PR: string
+  readonly VITE_API_ENDPOINT_RECORD_EVALUATE: string
   readonly VITE_API_ENDPOINT_RECORD_CLAN_INFO: string
 }
 
