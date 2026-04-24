@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="优化对局记录使用体验。此版本前的对局记录已不兼容。"
+              time="2026-04-24"
+              title="v1.3.0"
+              type="success" />
+            <n-timeline-item
               content="优化UI，修复对局监控页面玩家列表错位的bug。"
               time="2026-04-23"
               title="v1.2.1"
