@@ -1,13 +1,8 @@
 import { ArenaPlayerStatItem } from './http'
-import { ShipInfoDetail } from './file'
 
 /**
- * 回放文件（`.wowsreplay`）解析类型
- *
- * 定义 replay 文件头中的战斗结果与玩家表现数据。
+ * 战斗胜负结果
  */
-
-/** 战斗胜负结果 */
 export interface ReplayMatchResult {
   result: string
   teamId: number
@@ -48,9 +43,9 @@ export interface ReplayLiteReport {
 }
 
 /**
- * 单名玩家的战斗报告
+ * 单名玩家的战斗报告（遗留类型）
  *
- * 从 replay 文件解析的原始数据，不含后端计算的 PR 等级。
+ * 仅用于 replay 解析服务内部的数据映射，新代码应使用 {@link BattleRecordPlayer}。
  */
 export interface ReplayPlayerBattleReport {
   accountId: number
@@ -70,7 +65,7 @@ export interface ReplayPlayerBattleReport {
   clanTagColor?: string
 }
 
-/** 完整 replay 战斗报告 */
+/** 完整 replay 战斗报告（遗留类型） */
 export interface ReplayBattleReportResponse {
   matchResult: ReplayMatchResult
   mapName: string
@@ -82,9 +77,9 @@ export interface ReplayBattleReportResponse {
 }
 
 /**
- * 记录详情页的玩家数据
+ * 记录详情页的玩家数据（遗留类型）
  *
- * 在 `ReplayPlayerBattleReport` 基础上追加后端计算的 PR、伤害等级等。
+ * 旧接口 /app/record/detail 仍在使用，新代码应使用 {@link BattleRecordPlayer}。
  */
 export interface RecordDetailPlayerResponse extends ReplayPlayerBattleReport {
   pr?: ArenaPlayerStatItem
@@ -93,20 +88,11 @@ export interface RecordDetailPlayerResponse extends ReplayPlayerBattleReport {
   xpLevel?: ArenaPlayerStatItem
 }
 
-/** 玩家公会信息响应 */
+/** 玩家公会信息响应（遗留类型，旧接口仍在使用） */
 export interface RecordClanInfoResponse {
   accountId: number
   clanId?: number
   clanName?: string
   clanTag?: string
   clanTagColor?: string
-}
-
-/**
- * 带舰船信息的完整玩家记录
- *
- * 用于战绩详情页展示，舰船信息通过 `shipId` 查询本地缓存后填充。
- */
-export interface RecordPlayerInfo extends RecordDetailPlayerResponse {
-  shipInfo: ShipInfoDetail | undefined
 }

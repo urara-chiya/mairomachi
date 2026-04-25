@@ -41,6 +41,11 @@ export function deleteRecord(id: string): void {
   logger.info('RecordStore', `Deleted battle record ${id}, total: ${records.length}`)
 }
 
+/** 检查是否已存在指定 replayPath 的记录 */
+export function hasRecordByReplayPath(replayPath: string): boolean {
+  return getRecords().some((r) => r.replayPath === replayPath)
+}
+
 /**
  * 清理过期战绩记录
  * @param cacheDays - 保留天数

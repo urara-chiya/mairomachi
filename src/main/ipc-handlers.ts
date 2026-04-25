@@ -8,7 +8,7 @@ import { sendToast } from './utils/ipc-sender'
 import { activate, isActivated, login, logout, refreshToken } from './service/auth-service'
 import { createConfigService } from './service/config-service'
 import monitor, { checkArenaNow, runMonitor, stopMonitor } from './service/arena-monitor-service'
-import { selectDirPath } from './service/file-service'
+import { selectDirPath, selectReplayFile } from './service/file-service'
 import { fetchArenaInfo } from './service/arena-info-service'
 import { clearArenaCache, getArenaCache } from './store'
 import { getShipsInfo } from './service/ship-info-service'
@@ -17,9 +17,11 @@ import {
   fetchBatchPr,
   fetchClanInfo,
   fetchRecordDetail,
+  fetchRecordEnrich,
   fetchRecordStats,
   listRecords,
   parseAndSaveLatestReplay,
+  parseAndSaveReplayFile,
   removeRecord
 } from './service/record-service'
 import { logger } from './service/logger'
@@ -229,6 +231,13 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     return result
   })
 
+  registerHandler(INVOKE_CHANNELS.EXPLORER_SELECT_REPLAY_FILE, async () => {
+    logger.info('Explorer', 'Select replay file dialog')
+    const result = await selectReplayFile()
+    logger.info('Explorer', `Selected replay: ${result || 'none'}`)
+    return result
+  })
+
   registerHandler(INVOKE_CHANNELS.EXPLORER_NORMALIZE_GAME_PATH, (_, path) => {
     const normalized = normalize(path)
     const replaysIndex = normalized.toLowerCase().indexOf(`${sep}replays`)
@@ -350,6 +359,29 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     assertIsArray(request.accountIds, 'accountIds')
     logger.info('Record', `Fetching clan info for ${request.accountIds.length} players`)
     return await fetchClanInfo(request)
+  })
+
+  /**
+   * 单场对局一站式 enrich（PR 等级 + 公会信息）
+   * @param request - 请求参数，包含 matchResult、players、realm
+   * @returns enrich 后的计算结果和公会信息
+   * @throws realm 非法时抛出错误
+   */
+  registerHandler(INVOKE_CHANNELS.RECORD_ENRICH_BATTLE, async (_, request) => {
+    assertRealm(request.realm)
+    logger.info('Record', `Enrich battle request: ${request.players?.length || 0} players`)
+    return await fetchRecordEnrich(request)
+  })
+
+  /**
+   * 手动选择 replay 文件并解析保存
+   * @param request - 请求参数，包含 filePath 和 realm
+   * @returns 解析后的战斗记录，或 null（解析失败或重复）
+   */
+  registerHandler(INVOKE_CHANNELS.RECORD_PARSE_FILE, async (_, request) => {
+    assertRealm(request.realm)
+    logger.info('Record', `Parse replay file request: ${request.filePath}`)
+    return await parseAndSaveReplayFile(request.filePath, request.realm)
   })
 
   // Ship

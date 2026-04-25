@@ -83,6 +83,7 @@ const ipc = {
 
   explorer: {
     selectDirectory: () => invoke(INVOKE_CHANNELS.EXPLORER_SELECT_DIRECTORY),
+    selectReplayFile: () => invoke(INVOKE_CHANNELS.EXPLORER_SELECT_REPLAY_FILE),
     normalizeGamePath: (path) => invoke(INVOKE_CHANNELS.EXPLORER_NORMALIZE_GAME_PATH, path),
     openExternal: (url) => invoke(INVOKE_CHANNELS.EXPLORER_OPEN_EXTERNAL, url)
   },
@@ -108,7 +109,9 @@ const ipc = {
     getDetail: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_DETAIL, request),
     getStats: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_STATS, request),
     getBatchPr: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_BATCH_PR, request),
-    getClanInfo: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_CLAN_INFO, request)
+    getClanInfo: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_CLAN_INFO, request),
+    enrichBattle: (request) => invoke(INVOKE_CHANNELS.RECORD_ENRICH_BATTLE, request),
+    parseFile: (request) => invoke(INVOKE_CHANNELS.RECORD_PARSE_FILE, request)
   },
 
   ship: {

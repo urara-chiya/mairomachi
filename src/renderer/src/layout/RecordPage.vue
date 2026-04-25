@@ -1,15 +1,9 @@
 <script lang="ts" setup>
-import { computed, CSSProperties, onMounted, onUnmounted, ref } from 'vue'
+import { computed, CSSProperties, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
-import { CloseOutlined } from '@vicons/antd'
+import { CloseOutlined, ImportOutlined } from '@vicons/antd'
 import { useAsync } from '@renderer/composables/useAsync'
-import type {
-  BattleRecord,
-  RecordBatchPrResponse,
-  RecordStatsResponse,
-  ShipInfoDetail,
-  ShipLanguageKey
-} from '@shared/types'
+import type { BattleRecord, RecordStatsResponse, ShipInfoDetail, ShipLanguageKey } from '@shared/types'
 import RecordDetailPage from '@renderer/layout/RecordDetailPage.vue'
 import RecordCard from '@renderer/components/RecordCard.vue'
 import { formatDate, getResultTagType, getResultText } from '@renderer/utils/format'
@@ -37,10 +31,13 @@ const allyUI = ref<'ltr' | 'rtl'>('ltr')
 const enemyUI = ref<'ltr' | 'rtl'>('rtl')
 const hidePlayerId = ref(false)
 const stats = ref<RecordStatsResponse | null>(null)
-const recordPrMap = ref<Record<string, RecordBatchPrResponse>>({})
 const shipInfoMap = ref<Record<number, ShipInfoDetail>>({})
 
-/** 从 records 提取的共享 SelfPlayer 列表，避免多次重复遍历 */
+// 筛选条件
+const filterShipId = ref<number | null>(null)
+const filterDateRange = ref<[number, number] | null>(null)
+
+/** 从全部 records 提取的 SelfPlayer 列表 */
 const selfPlayers = computed<SelfPlayer[]>(() => {
   const list: SelfPlayer[] = []
   for (const r of records.value) {
@@ -57,6 +54,58 @@ const selfPlayers = computed<SelfPlayer[]>(() => {
   }
   return list
 })
+
+/** 船只筛选下拉选项（从全部记录动态计算） */
+const shipOptions = computed(() => {
+  const ids = new Set(selfPlayers.value.map((p) => p.shipId))
+  const options = Array.from(ids).map((id) => {
+    const shipInfo = shipInfoMap.value[id]
+    const name = shipInfo?.names?.[shipNameLanguage.value] ?? shipInfo?.names?.['zh-cn'] ?? `Ship ${id}`
+    return { label: name, value: id }
+  })
+  options.sort((a, b) => a.label.localeCompare(b.label))
+  return options
+})
+
+/** 过滤后的记录 */
+const filteredRecords = computed(() => {
+  return records.value.filter((r) => {
+    const self = getSelfPlayer(r)
+    if (filterShipId.value != null && self?.shipId !== filterShipId.value) {
+      return false
+    }
+    if (filterDateRange.value) {
+      const dt = new Date(r.dateTime).getTime()
+      if (dt < filterDateRange.value[0] || dt > filterDateRange.value[1]) {
+        return false
+      }
+    }
+    return true
+  })
+})
+
+/** 从过滤后 records 提取的 SelfPlayer 列表 */
+const filteredSelfPlayers = computed<SelfPlayer[]>(() => {
+  const list: SelfPlayer[] = []
+  for (const r of filteredRecords.value) {
+    const self = getSelfPlayer(r)
+    if (!self) continue
+    list.push({
+      recordId: r.id,
+      shipId: self.shipId,
+      damage: self.damage,
+      frags: self.frags,
+      rawExp: self.rawExp,
+      result: r.matchResult?.result as 'win' | 'loss' | 'draw' | undefined
+    })
+  }
+  return list
+})
+
+/** 统计栏基于过滤后的记录 */
+const totalCount = computed(() => filteredRecords.value.length)
+const winCount = computed(() => filteredRecords.value.filter((r) => r.matchResult?.result === 'win').length)
+const lossCount = computed(() => filteredRecords.value.filter((r) => r.matchResult?.result === 'loss').length)
 
 const {
   execute: loadRecordConfig,
@@ -95,39 +144,9 @@ const { execute: loadRecords, loading: isLoading } = useAsync({
   }
 })
 
-const { execute: loadBatchPr, loading: isLoadingBatchPr } = useAsync({
-  fn: async () => {
-    const players = selfPlayers.value
-    const requests = players.map((self) => ({
-      shipId: self.shipId,
-      damage: self.damage,
-      frags: self.frags,
-      wins: self.result === 'win' ? 100 : self.result === 'loss' ? 0 : 50,
-      rawExp: self.rawExp
-    }))
-    if (requests.length === 0) {
-      recordPrMap.value = {}
-      return
-    }
-    const result = await window.ipc.record.getBatchPr(requests)
-    const map: Record<string, RecordBatchPrResponse> = {}
-    result.forEach((item, idx) => {
-      map[players[idx].recordId] = item
-    })
-    recordPrMap.value = map
-  },
-  onError: () => {
-    message.error('加载记录颜色失败>_<')
-  }
-})
-
-const totalCount = computed(() => records.value.length)
-const winCount = computed(() => records.value.filter((r) => r.matchResult?.result === 'win').length)
-const lossCount = computed(() => records.value.filter((r) => r.matchResult?.result === 'loss').length)
-
 const { execute: loadStats, loading: isLoadingStats } = useAsync({
   fn: async () => {
-    const selfRecords = selfPlayers.value.map((self) => ({
+    const selfRecords = filteredSelfPlayers.value.map((self) => ({
       shipId: self.shipId,
       damage: self.damage,
       frags: self.frags,
@@ -144,18 +163,48 @@ const { execute: loadStats, loading: isLoadingStats } = useAsync({
   }
 })
 
+// 筛选条件变化时自动重新计算 stats
+watch([filterShipId, filterDateRange], () => {
+  loadStats()
+})
+
 const { execute: deleteRecordById } = useAsync({
   fn: async (id: string) => {
     await window.ipc.record.delete(id)
     await loadRecords()
     await loadStats()
-    await loadBatchPr()
   },
   onSuccess: () => {
     message.success('记录已删除')
   },
   onError: () => {
     message.error('删除记录失败>_<')
+  }
+})
+
+/** 手动导入 replay 文件 */
+const { execute: importReplay, loading: isImporting } = useAsync({
+  fn: async () => {
+    const filePath = await window.ipc.explorer.selectReplayFile()
+    if (!filePath) return
+
+    const config = await window.ipc.settings.load()
+    const realm = config.arenaMonitor?.realm ?? 'ASIA'
+
+    const record = await window.ipc.record.parseFile({ filePath, realm })
+    if (record) {
+      message.success('对局记录导入成功')
+      await loadRecords()
+      await loadStats()
+    }
+  },
+  onError: (err) => {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('已被导入过')) {
+      message.warning('该 replay 文件已被导入过')
+    } else {
+      message.error('导入失败>_<')
+    }
   }
 })
 
@@ -175,7 +224,6 @@ onMounted(async () => {
   hidePlayerId.value = config.ui.hidePlayerId
   await loadRecords()
   await loadStats()
-  await loadBatchPr()
 
   unsubscribeSettings = window.ipc.settings.onChanged((cfg) => {
     if (recordConfig.value) {
@@ -202,11 +250,62 @@ const wrapperCardContentStyle: CSSProperties = {
   flexDirection: 'column',
   gap: '8px'
 }
+const recordFilterWrapperContentStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '8px'
+}
+
+const dateShortcutsConfig = [
+  {
+    label: '今天',
+    range: () => {
+      const now = Date.now()
+      return [now, now]
+    }
+  },
+  {
+    label: '最近3天',
+    range: () => {
+      const now = Date.now()
+      return [now - 3 * 24 * 60 * 60 * 1000, now]
+    }
+  },
+  {
+    label: '最近7天',
+    range: () => {
+      const now = Date.now()
+      return [now - 7 * 24 * 60 * 60 * 1000, now]
+    }
+  },
+  {
+    label: '最近30天',
+    range: () => {
+      const now = Date.now()
+      return [now - 30 * 24 * 60 * 60 * 1000, now]
+    }
+  },
+  {
+    label: '本月',
+    range: () => {
+      const now = new Date()
+      return [new Date(now.getFullYear(), now.getMonth(), 1).getTime(), now.getTime()]
+    }
+  }
+]
+const dateShortcuts = computed(() => {
+  const shortcuts = {}
+  dateShortcutsConfig.filter((cfg) => {
+    shortcuts[cfg.label] = cfg.range
+  })
+  return shortcuts
+})
 </script>
 
 <template>
   <n-spin
-    :show="isLoading || isLoadingStats || isLoadingBatchPr"
+    :show="isLoading || isLoadingStats || isImporting"
     class="record-page"
     :content-style="recordPageContentStyle"
     description="正在加载记录...">
@@ -221,12 +320,21 @@ const wrapperCardContentStyle: CSSProperties = {
       <n-flex v-else-if="records.length <= 0" align="center" class="empty-wrapper" justify="center">
         <n-empty description="这里什么也没有。。。" size="large">
           <template #extra>
-            <n-text depth="3">自动保存的对局记录会显示在这里</n-text>
+            <n-flex vertical align="center" :size="8">
+              <n-text depth="3">自动保存的对局记录会显示在这里</n-text>
+              <n-button secondary size="small" type="primary" @click="importReplay">
+                <template #icon>
+                  <n-icon :component="ImportOutlined" />
+                </template>
+                导入 Replay
+              </n-button>
+            </n-flex>
           </template>
         </n-empty>
       </n-flex>
       <template v-else>
         <div class="record-page-content">
+          <!-- 统计栏 -->
           <n-flex align="center" class="record-stat-wrapper" justify="space-between" :size="8">
             <n-card class="record-stat-card" size="small" title="总场次">
               <n-text class="stat-font" type="info">{{ totalCount }}</n-text>
@@ -238,34 +346,80 @@ const wrapperCardContentStyle: CSSProperties = {
               <n-text class="stat-font" type="error">{{ lossCount }}</n-text>
             </n-card>
             <n-card class="record-stat-card" size="small" title="胜率">
-              <n-text :style="{ color: stats?.winRateColor }" class="stat-font">{{ stats?.winRate ?? 0 }}%</n-text>
+              <n-text :style="{ color: stats?.winRate?.color }" class="stat-font"
+                >{{ stats?.winRate?.value ?? 0 }}%</n-text
+              >
             </n-card>
             <n-card class="record-stat-card" size="small" title="场均">
-              <n-text :style="{ color: stats?.avgDamageColor }" class="stat-font">{{ stats?.avgDamage ?? 0 }}</n-text>
+              <n-text :style="{ color: stats?.avgDamage?.color }" class="stat-font">{{
+                stats?.avgDamage?.value ?? 0
+              }}</n-text>
             </n-card>
             <n-card class="record-stat-card" size="small" title="PR">
-              <n-text :style="{ color: stats?.overallPrColor }" class="stat-font">{{ stats?.overallPr ?? 0 }}</n-text>
+              <n-text :style="{ color: stats?.overallPr?.color }" class="stat-font">{{
+                stats?.overallPr?.value ?? 0
+              }}</n-text>
             </n-card>
           </n-flex>
+
+          <!-- 筛选栏 -->
+          <n-card
+            class="record-filter-wrapper"
+            :content-style="recordFilterWrapperContentStyle"
+            embedded
+            size="small"
+            :bordered="false">
+            <n-space :size="8">
+              <n-select
+                v-model:value="filterShipId"
+                :options="shipOptions"
+                placeholder="筛选船只"
+                clearable
+                size="small"
+                style="width: 240px"
+                :consistent-menu-width="false" />
+              <n-date-picker
+                v-model:value="filterDateRange"
+                type="daterange"
+                clearable
+                size="small"
+                style="width: 320px"
+                :shortcuts="dateShortcuts" />
+            </n-space>
+            <n-button secondary size="small" type="primary" @click="importReplay">
+              <template #icon>
+                <n-icon :component="ImportOutlined" />
+              </template>
+              导入 Replay
+            </n-button>
+          </n-card>
+
+          <!-- 记录列表 -->
           <n-card
             class="record-list-wrapper"
             :content-style="wrapperCardContentStyle"
             size="small"
             content-scrollable
             :bordered="false">
-            <n-alert :bordered="false" :show-icon="true" size="small" type="info" style="width: 100%">
+            <n-alert
+              v-if="filteredRecords.length === 0"
+              :bordered="false"
+              :show-icon="true"
+              size="small"
+              type="warning"
+              style="width: 100%">
+              没有符合筛选条件的记录，请调整筛选条件
+            </n-alert>
+            <n-alert v-else :bordered="false" :show-icon="true" size="small" type="info" style="width: 100%">
               仅随机战（PvP）对局会被自动保存，其他模式（排位、军团战、剧情等）不会计入记录。
             </n-alert>
             <record-card
-              v-for="record in records"
+              v-for="record in filteredRecords"
               :key="record.id"
-              :dmg="recordPrMap[record.id]?.dmg"
-              :frags="recordPrMap[record.id]?.frags"
               :language="shipNameLanguage"
-              :pr="recordPrMap[record.id]?.pr"
+              :player="getSelfPlayer(record)"
               :record="record"
               :ship-info="shipInfoMap[getSelfPlayer(record)?.shipId ?? 0]"
-              :xp="recordPrMap[record.id]?.xp"
               @click="openDetail"
               @delete="deleteRecordById" />
           </n-card>
@@ -343,9 +497,17 @@ const wrapperCardContentStyle: CSSProperties = {
   flex: 1;
 }
 
+.record-filter-wrapper {
+  width: 100%;
+  height: var(--mr-record-filter-height);
+  margin-bottom: var(--mr-sub-padding);
+  flex-shrink: 0;
+}
+
 .record-list-wrapper {
   height: calc(
-    100vh - var(--mr-header-height) - var(--mr-main-padding) * 2 - var(--mr-record-stat-height) - var(--mr-sub-padding)
+    100vh - var(--mr-header-height) - var(--mr-main-padding) * 2 - var(--mr-record-stat-height) -
+      var(--mr-record-filter-height) - var(--mr-sub-padding) * 2
   );
 }
 

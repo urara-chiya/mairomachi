@@ -74,6 +74,7 @@ export const INVOKE_CHANNELS = {
 
   // Explorer
   EXPLORER_SELECT_DIRECTORY: 'explorer:selectDirectory' as const,
+  EXPLORER_SELECT_REPLAY_FILE: 'explorer:selectReplayFile' as const,
   EXPLORER_NORMALIZE_GAME_PATH: 'explorer:normalizeGamePath' as const,
   EXPLORER_OPEN_EXTERNAL: 'explorer:openExternal' as const,
 
@@ -93,6 +94,8 @@ export const INVOKE_CHANNELS = {
   RECORD_GET_STATS: 'record:getStats' as const,
   RECORD_GET_BATCH_PR: 'record:getBatchPr' as const,
   RECORD_GET_CLAN_INFO: 'record:getClanInfo' as const,
+  RECORD_ENRICH_BATTLE: 'record:enrichBattle' as const,
+  RECORD_PARSE_FILE: 'record:parseFile' as const,
 
   // Ship
   SHIP_GET_BY_IDS: 'ship:getByIds' as const,

@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="对局记录模块重构，支持按船只和日期筛选，支持手动导入 replay；对局记录相关后端接口优化。优化了对局记录的数据结构，更省空间了！此版本前的对局记录已不兼容。"
+              time="2026-04-26"
+              title="v1.4.0"
+              type="success" />
+            <n-timeline-item
               content="优化对局记录使用体验。此版本前的对局记录已不兼容。"
               time="2026-04-24"
               title="v1.3.0"

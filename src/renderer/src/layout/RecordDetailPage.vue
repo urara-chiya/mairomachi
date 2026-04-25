@@ -1,13 +1,6 @@
 <script lang="ts" setup>
 import { computed, CSSProperties, ref, watch } from 'vue'
-import type {
-  ArenaPlayerStatItem,
-  BattleRecord,
-  RecordClanInfoResponse,
-  RecordPlayerInfo,
-  ShipInfoDetail,
-  ShipLanguageKey
-} from '@shared/types'
+import type { BattleRecord, RecordPlayerInfo, ShipInfoDetail, ShipLanguageKey } from '@shared/types'
 import RecordPlayerCard from '@renderer/components/RecordPlayerCard.vue'
 import { useMessage } from 'naive-ui'
 
@@ -26,18 +19,6 @@ defineEmits<{
 const message = useMessage()
 
 const shipInfoMap = ref<Record<string, ShipInfoDetail>>({})
-const enrichedPlayers = ref<
-  Record<
-    number,
-    {
-      pr?: ArenaPlayerStatItem
-      dmg?: ArenaPlayerStatItem
-      fragsLevel?: ArenaPlayerStatItem
-      xpLevel?: ArenaPlayerStatItem
-    }
-  >
->({})
-const clanInfoMap = ref<Record<number, RecordClanInfoResponse>>({})
 const loading = ref(false)
 
 watch(
@@ -45,71 +26,12 @@ watch(
   async (record) => {
     if (!record) {
       shipInfoMap.value = {}
-      enrichedPlayers.value = {}
-      clanInfoMap.value = {}
       return
     }
     loading.value = true
     try {
       const shipIds = record.players.map((p) => p.shipId)
-      const shipMap = await window.ipc.ship.getByIds(shipIds)
-      shipInfoMap.value = shipMap
-
-      // 优先使用本地预计算的 enrich 数据
-      if (record.enrichedPlayers && record.enrichedPlayers.length > 0) {
-        enrichedPlayers.value = record.enrichedPlayers.reduce(
-          (acc, p) => {
-            acc[p.accountId] = {
-              pr: p.pr,
-              dmg: p.dmg,
-              fragsLevel: p.fragsLevel,
-              xpLevel: p.xpLevel
-            }
-            return acc
-          },
-          {} as typeof enrichedPlayers.value
-        )
-      } else {
-        const detailPlayers = await window.ipc.record.getDetail({
-          matchResult: JSON.parse(JSON.stringify(record.matchResult)),
-          players: JSON.parse(JSON.stringify(record.players))
-        })
-        enrichedPlayers.value = detailPlayers.reduce(
-          (acc, p) => {
-            acc[p.accountId] = {
-              pr: p.pr,
-              dmg: p.dmg,
-              fragsLevel: p.fragsLevel,
-              xpLevel: p.xpLevel
-            }
-            return acc
-          },
-          {} as typeof enrichedPlayers.value
-        )
-      }
-
-      if (record.enrichedClanInfos && record.enrichedClanInfos.length > 0) {
-        clanInfoMap.value = record.enrichedClanInfos.reduce(
-          (acc, c) => {
-            acc[c.accountId] = c
-            return acc
-          },
-          {} as Record<number, RecordClanInfoResponse>
-        )
-      } else {
-        const accountIds = record.players.map((p) => p.accountId)
-        const clanInfos = await window.ipc.record.getClanInfo({
-          accountIds,
-          realm: record.realm
-        })
-        clanInfoMap.value = clanInfos.reduce(
-          (acc, c) => {
-            acc[c.accountId] = c
-            return acc
-          },
-          {} as Record<number, RecordClanInfoResponse>
-        )
-      }
+      shipInfoMap.value = await window.ipc.ship.getByIds(shipIds)
     } catch {
       message.error('对局详情加载失败了>_<')
     } finally {
@@ -121,15 +43,7 @@ watch(
 
 const assemblePlayer = (player: BattleRecord['players'][number]): RecordPlayerInfo => ({
   ...player,
-  pr: enrichedPlayers.value[player.accountId]?.pr,
-  dmg: enrichedPlayers.value[player.accountId]?.dmg,
-  fragsLevel: enrichedPlayers.value[player.accountId]?.fragsLevel,
-  xpLevel: enrichedPlayers.value[player.accountId]?.xpLevel,
-  shipInfo: shipInfoMap.value[player.shipId.toString()],
-  clanId: clanInfoMap.value[player.accountId]?.clanId,
-  clanName: clanInfoMap.value[player.accountId]?.clanName,
-  clanTag: clanInfoMap.value[player.accountId]?.clanTag,
-  clanTagColor: clanInfoMap.value[player.accountId]?.clanTagColor
+  shipInfo: shipInfoMap.value[player.shipId.toString()]
 })
 
 const sortByExpDesc = (a: RecordPlayerInfo, b: RecordPlayerInfo): number => b.exp - a.exp

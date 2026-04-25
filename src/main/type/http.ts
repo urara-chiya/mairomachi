@@ -117,12 +117,9 @@ export interface LoginResult {
 /** 战绩统计响应 */
 export interface RecordStatsResponse {
   totalBattles: number
-  winRate: number
-  avgDamage: number
-  overallPr: number
-  overallPrColor: string
-  winRateColor: string
-  avgDamageColor: string
+  winRate: ArenaPlayerStatItem
+  avgDamage: ArenaPlayerStatItem
+  overallPr: ArenaPlayerStatItem
 }
 
 /** 批量 PR 查询响应 */
@@ -131,4 +128,43 @@ export interface RecordBatchPrResponse {
   dmg?: ArenaPlayerStatItem
   frags?: ArenaPlayerStatItem
   xp?: ArenaPlayerStatItem
+}
+
+// ==============================================================================
+// RecordController 新接口类型（面向业务的对局记录服务）
+// ==============================================================================
+
+/** 单场对局 enrich 请求 */
+export interface RecordEnrichBattleRequest {
+  matchResult: {
+    result: string
+    teamId: number
+  }
+  players: {
+    accountId: number
+    shipId: number
+    damage: number
+    frags: number
+    rawExp: number
+    teamId: number
+  }[]
+  realm: Realm
+}
+
+/** 单场对局 enrich 响应 */
+export interface RecordEnrichBattleResponse {
+  evaluateResults: {
+    accountId: number
+    pr?: ArenaPlayerStatItem
+    dmg?: ArenaPlayerStatItem
+    fragsLevel?: ArenaPlayerStatItem
+    xpLevel?: ArenaPlayerStatItem
+  }[]
+  clanInfos: {
+    accountId: number
+    clanId?: number
+    clanName?: string
+    clanTag?: string
+    clanTagColor?: string
+  }[]
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ArenaPlayerStatItem, BattleRecord, ShipInfoDetail, ShipLanguageKey } from '@shared/types'
+import type { BattleRecord, BattleRecordPlayer, ShipInfoDetail, ShipLanguageKey } from '@shared/types'
 import { computed } from 'vue'
 import { CloseOutlined } from '@vicons/antd'
 import PlayerCardWrapper from '@renderer/components/PlayerCardWrapper.vue'
@@ -10,10 +10,7 @@ import { formatDate, formatInteger, getResultTagType, getResultText } from '@ren
 
 const props = defineProps<{
   record: BattleRecord
-  pr?: ArenaPlayerStatItem
-  dmg?: ArenaPlayerStatItem
-  frags?: ArenaPlayerStatItem
-  xp?: ArenaPlayerStatItem
+  player?: BattleRecordPlayer
   shipInfo?: ShipInfoDetail
   language?: ShipLanguageKey
 }>()
@@ -27,33 +24,31 @@ const handleClick = (): void => {
   emit('click', props.record)
 }
 
-const selfPlayer = computed(() => props.record.self ?? props.record.players.find((p) => p.relation === 'Self'))
-
 const shipName = computed(() => getShipName(props.shipInfo, props.language || 'zh-cn'))
 
-const damageItem = computed((): ArenaPlayerStatItem | undefined => {
-  if (!selfPlayer.value) return undefined
+const damageItem = computed(() => {
+  if (!props.player) return undefined
   return {
-    value: selfPlayer.value.damage,
-    color: props.dmg?.color ?? '#888888',
+    value: props.player.damage,
+    color: props.player.dmg?.color ?? '#888888',
     tag: ''
   }
 })
 
-const fragsItem = computed((): ArenaPlayerStatItem | undefined => {
-  if (!selfPlayer.value) return undefined
+const fragsItem = computed(() => {
+  if (!props.player) return undefined
   return {
-    value: selfPlayer.value.frags,
-    color: props.frags?.color ?? '#888888',
+    value: props.player.frags,
+    color: props.player.fragsLevel?.color ?? '#888888',
     tag: ''
   }
 })
 
-const expItem = computed((): ArenaPlayerStatItem | undefined => {
-  if (!selfPlayer.value) return undefined
+const expItem = computed(() => {
+  if (!props.player) return undefined
   return {
-    value: selfPlayer.value.exp,
-    color: props.xp?.color ?? '#888888',
+    value: props.player.exp,
+    color: props.player.xpLevel?.color ?? '#888888',
     tag: ''
   }
 })
@@ -65,7 +60,7 @@ const handleDelete = (e: MouseEvent): void => {
 </script>
 
 <template>
-  <player-card-wrapper :pr="pr" class="record-card" @click="handleClick">
+  <player-card-wrapper :pr="player?.pr" class="record-card" @click="handleClick">
     <n-flex :size="4" class="record-card-content" justify="center" vertical>
       <n-flex align="center" justify="space-between">
         <n-flex :size="8" align="center">
@@ -94,7 +89,7 @@ const handleDelete = (e: MouseEvent): void => {
         <arena-player-stat :format="formatInteger" :stat="damageItem" label="伤害" />
         <arena-player-stat :stat="fragsItem" label="击杀" />
         <arena-player-stat :stat="expItem" label="经验" />
-        <arena-player-stat :format="formatInteger" :stat="pr" label="PR" />
+        <arena-player-stat :format="formatInteger" :stat="player?.pr" label="PR" />
       </n-space>
     </n-flex>
   </player-card-wrapper>

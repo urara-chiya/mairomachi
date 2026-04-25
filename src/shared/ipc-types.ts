@@ -11,6 +11,8 @@ import {
   RecordBatchPrResponse,
   RecordClanInfoResponse,
   RecordDetailPlayerResponse,
+  RecordEnrichBattleRequest,
+  RecordEnrichBattleResponse,
   RecordStatsResponse,
   ShipInfoDetail,
   ToastInfo,
@@ -101,6 +103,10 @@ export interface InvokeChannels {
     request: void
     response: string
   }
+  'explorer:selectReplayFile': {
+    request: void
+    response: string
+  }
   'explorer:normalizeGamePath': {
     request: string
     response: string
@@ -179,6 +185,14 @@ export interface InvokeChannels {
   'record:getClanInfo': {
     request: { accountIds: number[]; realm: Realm }
     response: RecordClanInfoResponse[]
+  }
+  'record:enrichBattle': {
+    request: RecordEnrichBattleRequest
+    response: RecordEnrichBattleResponse
+  }
+  'record:parseFile': {
+    request: { filePath: string; realm: Realm }
+    response: BattleRecord | null
   }
 
   // Update
@@ -312,6 +326,7 @@ export interface IPCSettingsAPI {
 
 export interface IPCExplorerAPI {
   selectDirectory: InvokeFn<'explorer:selectDirectory'>
+  selectReplayFile: InvokeFn<'explorer:selectReplayFile'>
   normalizeGamePath: InvokeFn<'explorer:normalizeGamePath'>
   openExternal: InvokeFn<'explorer:openExternal'>
 }
@@ -339,6 +354,8 @@ export interface IPCRecordAPI {
   getStats: InvokeFn<'record:getStats'>
   getBatchPr: InvokeFn<'record:getBatchPr'>
   getClanInfo: InvokeFn<'record:getClanInfo'>
+  enrichBattle: InvokeFn<'record:enrichBattle'>
+  parseFile: InvokeFn<'record:parseFile'>
 }
 
 export interface IPCUpdateAPI {
