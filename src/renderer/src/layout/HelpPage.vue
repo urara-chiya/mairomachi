@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="修复筛选单条记录时 PR 显示不一致的问题；修复日期快捷筛选（今天、最近N天）范围不正确的问题。"
+              time="2026-04-27"
+              title="v1.4.1"
+              type="success" />
+            <n-timeline-item
               content="对局记录模块重构，支持按船只和日期筛选，支持手动导入 replay；对局记录相关后端接口优化。优化了对局记录的数据结构，更省空间了！此版本前的对局记录已不兼容。"
               time="2026-04-26"
               title="v1.4.0"

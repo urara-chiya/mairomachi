@@ -1,6 +1,6 @@
 {
   "name": "mairomachi",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "World of Warships查询小帮手",
   "main": "./out/main/index.js",
   "author": "2274835706@qq.com",

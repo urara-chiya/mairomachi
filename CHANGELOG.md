@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.4.1] - 2026-04-27
+
+### Fixed
+
+- **筛选 PR 不一致**：修复对局记录筛选时，卡片显示的 PR 与统计栏整体 PR 不一致的问题（前端 `wins` 推导逻辑与后端不对齐）。
+- **日期快捷筛选**：修复"今天"等日期快捷设置的范围未对齐到整天边界，导致筛选结果不正确的问题。
+
 ## [1.4.0] - 2026-04-26
 
 ### Added

@@ -8,6 +8,7 @@ import RecordDetailPage from '@renderer/layout/RecordDetailPage.vue'
 import RecordCard from '@renderer/components/RecordCard.vue'
 import { formatDate, getResultTagType, getResultText } from '@renderer/utils/format'
 import { getSelfPlayer } from '@renderer/utils/record'
+import { getDayRange } from '@renderer/utils/date'
 
 /** 共享的 SelfPlayer 数据结构 */
 interface SelfPlayer {
@@ -16,7 +17,6 @@ interface SelfPlayer {
   damage: number
   frags: number
   rawExp: number
-  result: 'win' | 'loss' | 'draw' | undefined
 }
 
 defineOptions({ inheritAttrs: false })
@@ -48,8 +48,7 @@ const selfPlayers = computed<SelfPlayer[]>(() => {
       shipId: self.shipId,
       damage: self.damage,
       frags: self.frags,
-      rawExp: self.rawExp,
-      result: r.matchResult?.result as 'win' | 'loss' | 'draw' | undefined
+      rawExp: self.rawExp
     })
   }
   return list
@@ -82,24 +81,6 @@ const filteredRecords = computed(() => {
     }
     return true
   })
-})
-
-/** 从过滤后 records 提取的 SelfPlayer 列表 */
-const filteredSelfPlayers = computed<SelfPlayer[]>(() => {
-  const list: SelfPlayer[] = []
-  for (const r of filteredRecords.value) {
-    const self = getSelfPlayer(r)
-    if (!self) continue
-    list.push({
-      recordId: r.id,
-      shipId: self.shipId,
-      damage: self.damage,
-      frags: self.frags,
-      rawExp: self.rawExp,
-      result: r.matchResult?.result as 'win' | 'loss' | 'draw' | undefined
-    })
-  }
-  return list
 })
 
 /** 统计栏基于过滤后的记录 */
@@ -146,12 +127,28 @@ const { execute: loadRecords, loading: isLoading } = useAsync({
 
 const { execute: loadStats, loading: isLoadingStats } = useAsync({
   fn: async () => {
-    const selfRecords = filteredSelfPlayers.value.map((self) => ({
-      shipId: self.shipId,
-      damage: self.damage,
-      frags: self.frags,
-      wins: self.result === 'win' ? 100 : self.result === 'loss' ? 0 : 50
-    }))
+    const selfRecords = filteredRecords.value
+      .map((record) => {
+        const self = getSelfPlayer(record)
+        if (!self) return null
+        const matchResult = record.matchResult?.result
+        const winningTeam = record.matchResult?.teamId
+        let wins: number
+        if (matchResult === 'draw') {
+          wins = 50
+        } else if (winningTeam != null) {
+          wins = self.teamId === winningTeam ? 100 : 0
+        } else {
+          wins = 50
+        }
+        return {
+          shipId: self.shipId,
+          damage: self.damage,
+          frags: self.frags,
+          wins
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r != null)
     if (selfRecords.length === 0) {
       stats.value = null
       return
@@ -254,43 +251,34 @@ const recordFilterWrapperContentStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: '8px'
+  gap: '8px',
+  flexWrap: 'nowrap'
 }
 
 const dateShortcutsConfig = [
   {
     label: '今天',
-    range: () => {
-      const now = Date.now()
-      return [now, now]
-    }
+    range: () => getDayRange()
   },
   {
     label: '最近3天',
-    range: () => {
-      const now = Date.now()
-      return [now - 3 * 24 * 60 * 60 * 1000, now]
-    }
+    range: () => getDayRange(2)
   },
   {
     label: '最近7天',
-    range: () => {
-      const now = Date.now()
-      return [now - 7 * 24 * 60 * 60 * 1000, now]
-    }
+    range: () => getDayRange(6)
   },
   {
     label: '最近30天',
-    range: () => {
-      const now = Date.now()
-      return [now - 30 * 24 * 60 * 60 * 1000, now]
-    }
+    range: () => getDayRange(29)
   },
   {
     label: '本月',
     range: () => {
       const now = new Date()
-      return [new Date(now.getFullYear(), now.getMonth(), 1).getTime(), now.getTime()]
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - 1
+      return [start, end]
     }
   }
 ]
@@ -346,9 +334,9 @@ const dateShortcuts = computed(() => {
               <n-text class="stat-font" type="error">{{ lossCount }}</n-text>
             </n-card>
             <n-card class="record-stat-card" size="small" title="胜率">
-              <n-text :style="{ color: stats?.winRate?.color }" class="stat-font"
-                >{{ stats?.winRate?.value ?? 0 }}%</n-text
-              >
+              <n-text :style="{ color: stats?.winRate?.color }" class="stat-font">
+                {{ stats?.winRate?.value ?? 0 }}%
+              </n-text>
             </n-card>
             <n-card class="record-stat-card" size="small" title="场均">
               <n-text :style="{ color: stats?.avgDamage?.color }" class="stat-font">{{
