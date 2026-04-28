@@ -119,7 +119,20 @@ export interface RecordStatsResponse {
   totalBattles: number
   winRate: ArenaPlayerStatItem
   avgDamage: ArenaPlayerStatItem
+  avgFrags?: ArenaPlayerStatItem
+  avgExp?: ArenaPlayerStatItem
   overallPr: ArenaPlayerStatItem
+  shipStats?: ShipStatItem[]
+}
+
+export interface ShipStatItem {
+  shipId: string
+  battles: number
+  winRate: ArenaPlayerStatItem
+  avgDamage: ArenaPlayerStatItem
+  avgFrags?: ArenaPlayerStatItem
+  avgExp?: ArenaPlayerStatItem
+  pr: ArenaPlayerStatItem
 }
 
 /** 批量 PR 查询响应 */

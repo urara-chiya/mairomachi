@@ -26,6 +26,7 @@ function createWindow(): void {
     minimizable: true
   })
 
+  setMainWindow(mainWindow)
   registerIPCHandlers(mainWindow)
 
   mainWindow.on('ready-to-show', () => {

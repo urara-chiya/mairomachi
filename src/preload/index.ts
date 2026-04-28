@@ -108,6 +108,7 @@ const ipc = {
     delete: (id) => invoke(INVOKE_CHANNELS.RECORD_DELETE, id),
     getDetail: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_DETAIL, request),
     getStats: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_STATS, request),
+    getStatsBatch: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_STATS_BATCH, request),
     getBatchPr: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_BATCH_PR, request),
     getClanInfo: (request) => invoke(INVOKE_CHANNELS.RECORD_GET_CLAN_INFO, request),
     enrichBattle: (request) => invoke(INVOKE_CHANNELS.RECORD_ENRICH_BATTLE, request),
@@ -122,6 +123,11 @@ const ipc = {
     check: () => invoke(INVOKE_CHANNELS.UPDATE_CHECK),
     download: () => invoke(INVOKE_CHANNELS.UPDATE_DOWNLOAD),
     onProgress: (callback) => on(EMIT_CHANNELS.UPDATE_PROGRESS, callback)
+  },
+
+  clipboard: {
+    writeImage: (dataUrl) => invoke(INVOKE_CHANNELS.CLIPBOARD_WRITE_IMAGE, dataUrl),
+    captureAndWrite: (rect) => invoke(INVOKE_CHANNELS.CLIPBOARD_CAPTURE_AND_WRITE, rect)
   },
 
   notify: {

@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, shell } from 'electron'
+import { BrowserWindow, clipboard, ipcMain, nativeImage, shell } from 'electron'
 import { normalize, sep } from 'path'
 import { resolveAndValidateGamePath } from './utils/replay-files'
 import { EMIT_CHANNELS, INVOKE_CHANNELS } from '../shared/ipc'
@@ -19,6 +19,7 @@ import {
   fetchRecordDetail,
   fetchRecordEnrich,
   fetchRecordStats,
+  fetchRecordStatsBatch,
   listRecords,
   parseAndSaveLatestReplay,
   parseAndSaveReplayFile,
@@ -271,7 +272,7 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
 
   registerHandler(INVOKE_CHANNELS.ARENA_MONITOR_START, () => {
     logger.info('Arena', 'Monitor start')
-    runMonitor(mainWindow)
+    runMonitor()
   })
 
   registerHandler(INVOKE_CHANNELS.ARENA_MONITOR_STOP, () => {
@@ -336,6 +337,16 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
   registerHandler(INVOKE_CHANNELS.RECORD_GET_STATS, async (_, request) => {
     logger.info('Record', 'Fetching record stats')
     return await fetchRecordStats(request)
+  })
+
+  /**
+   * 批量计算战绩统计（按天分组的 stats）
+   * @param request - 请求参数，包含多组 records
+   * @returns 统计结果数组
+   */
+  registerHandler(INVOKE_CHANNELS.RECORD_GET_STATS_BATCH, async (_, request) => {
+    logger.info('Record', 'Fetching record stats batch')
+    return await fetchRecordStatsBatch(request)
   })
 
   /**
@@ -420,6 +431,40 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
         total
       })
     })
+  })
+
+  // Clipboard
+  registerHandler(INVOKE_CHANNELS.CLIPBOARD_WRITE_IMAGE, async (_, dataUrl) => {
+    logger.info('Clipboard', 'Writing image to clipboard')
+    try {
+      const image = nativeImage.createFromDataURL(dataUrl)
+      clipboard.writeImage(image)
+      return true
+    } catch (err) {
+      logger.error('Clipboard', `Failed to write image: ${err}`)
+      return false
+    }
+  })
+
+  registerHandler(INVOKE_CHANNELS.CLIPBOARD_CAPTURE_AND_WRITE, async (_, rect) => {
+    logger.info('Clipboard', `Capture page rect: x=${rect.x}, y=${rect.y}, w=${rect.width}, h=${rect.height}`)
+    try {
+      if (!mainWindowRef) {
+        logger.error('Clipboard', 'Main window not available')
+        return false
+      }
+      const image = await mainWindowRef.webContents.capturePage({
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      })
+      clipboard.writeImage(image)
+      return true
+    } catch (err) {
+      logger.error('Clipboard', `Failed to capture page: ${err}`)
+      return false
+    }
   })
 
   logger.info('IPC', `Registered ${handlers.size} handlers`)

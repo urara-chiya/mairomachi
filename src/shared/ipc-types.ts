@@ -172,6 +172,10 @@ export interface InvokeChannels {
     request: { shipId: number; damage: number; frags: number; wins: number }[]
     response: RecordStatsResponse
   }
+  'record:getStatsBatch': {
+    request: { records: { shipId: number; damage: number; frags: number; wins: number }[] }[]
+    response: RecordStatsResponse[]
+  }
   'record:getBatchPr': {
     request: {
       shipId: number
@@ -203,6 +207,21 @@ export interface InvokeChannels {
   'update:download': {
     request: void
     response: string
+  }
+
+  // Clipboard
+  'clipboard:writeImage': {
+    request: string
+    response: boolean
+  }
+  'clipboard:captureAndWrite': {
+    request: {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
+    response: boolean
   }
 }
 
@@ -352,6 +371,7 @@ export interface IPCRecordAPI {
   delete: InvokeFn<'record:delete'>
   getDetail: InvokeFn<'record:getDetail'>
   getStats: InvokeFn<'record:getStats'>
+  getStatsBatch: InvokeFn<'record:getStatsBatch'>
   getBatchPr: InvokeFn<'record:getBatchPr'>
   getClanInfo: InvokeFn<'record:getClanInfo'>
   enrichBattle: InvokeFn<'record:enrichBattle'>
@@ -375,6 +395,11 @@ export interface IPCArenaEventsAPI {
 }
 
 /** 完整的 IPC API 聚合接口（用于 Preload 暴露到渲染进程） */
+export interface IPCClipboardAPI {
+  writeImage: InvokeFn<'clipboard:writeImage'>
+  captureAndWrite: InvokeFn<'clipboard:captureAndWrite'>
+}
+
 export interface IpcApi {
   auth: IPCAuthAPI
   window: IPCWindowAPI
@@ -384,5 +409,6 @@ export interface IpcApi {
   ship: IPCShipAPI
   record: IPCRecordAPI
   update: IPCUpdateAPI
+  clipboard: IPCClipboardAPI
   notify: IPCNotifyAPI
 }

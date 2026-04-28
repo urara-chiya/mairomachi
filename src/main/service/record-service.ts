@@ -190,6 +190,17 @@ export async function fetchRecordStats(request: RecordStatsItem[]): Promise<Reco
   )
 }
 
+export async function fetchRecordStatsBatch(
+  requests: { records: RecordStatsItem[] }[]
+): Promise<RecordStatsResponse[]> {
+  logger.info('RecordService', 'Fetching record stats batch')
+  const result = await mairoClient.post<{ records: RecordStatsItem[] }[], MairoResult<RecordStatsResponse[]>>(
+    import.meta.env.VITE_API_ENDPOINT_RECORD_STATS_BATCH,
+    requests
+  )
+  return result.data ?? []
+}
+
 export async function fetchBatchPr(request: RecordBatchPrItem[]): Promise<RecordBatchPrResponse[]> {
   logger.info('RecordService', 'Fetching batch PR')
   const result = await mairoClient.post<RecordBatchPrItem[], MairoResult<RecordBatchPrResponse[]>>(

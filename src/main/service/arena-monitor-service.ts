@@ -1,13 +1,13 @@
 import chokidar, { FSWatcher } from 'chokidar'
 import path from 'node:path'
 import fs from 'node:fs'
-import { BrowserWindow } from 'electron'
+
 import { BattleRecord, FileArenaInfo } from '../type'
 import { getArenaMonitorConfig, getRecordConfig, saveRecord } from '../store'
 import { parseReplayFile } from './replay-service'
 import { enrichBattleRecord } from './record-service'
 import { notifyArenaDetected, notifyArenaEnded, notifyArenaRecordStatus, sendToast } from '../utils/ipc-sender'
-import { setMainWindow } from '../utils/window-state'
+
 import { resolveAndValidateGamePath, scanReplayFiles } from '../utils/replay-files'
 import { logger } from './logger'
 
@@ -321,9 +321,8 @@ export class ArenaMonitor implements ArenaMonitorController {
 const monitor = new ArenaMonitor()
 export default monitor
 
-export function runMonitor(mainWindow: BrowserWindow): void {
+export function runMonitor(): void {
   logger.info('ArenaMonitor', 'Running auto-monitor check')
-  setMainWindow(mainWindow)
 
   const config = getArenaMonitorConfig()
   logger.debug(

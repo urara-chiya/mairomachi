@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.5.0] - 2026-04-28
+
+### Added
+
+- **战绩统计导出页**：新增独立的战绩导出页面，支持一键截图复制到剪切板，包含 PR 横幅、玩家信息头、统计卡片和单船数据表格。
+- **侧栏趋势图**：战绩统计页新增右侧侧栏，展示最近 7 天的胜率、场均伤害、PR 三条独立折线图。
+- **单船颜色等级**：导出页和统计页的单船数据表格中，击杀（avgFrags）和经验（avgExp）均显示对应的颜色等级。
+- **筛选条件提示**：导出页固定显示当前筛选状态，包括时间区间和是否启用了船只筛选。
+
+### Changed
+
+- **每日统计分割点**：趋势图和批量统计的每日分割点从 00:00 调整为凌晨 04:00，更符合实际游戏日概念。
+- **截图方案**：导出页截图从 `html-to-image` 改为 Electron 原生 `webContents.capturePage()`，解决字体加载失败导致的截图失败问题，且自动适配设备 DPI。
+
+### Fixed
+
+- **胜率计算错误**：修复战绩统计中胜率恒为 100% 的问题。`matchResult.result` 在 replay 解析时已以用户视角处理，前端不再错误地通过 `teamId` 二次判断胜负。
+- **IPC 主窗口警告**：修复应用启动后未启动对局监控前，保存设置时出现的 `Main window not available` 警告。
+
 ## [1.4.1] - 2026-04-27
 
 ### Fixed

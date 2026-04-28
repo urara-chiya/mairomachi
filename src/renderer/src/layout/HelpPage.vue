@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="战绩统计导出页支持一键截图到剪切板；战绩统计页新增侧栏趋势图（胜率/场均/PR）；每日统计分割点调整为凌晨 04:00；导出页显示筛选条件状态；单船数据击杀与经验显示颜色等级；截图方案改为 Electron 原生实现更稳定；修复胜率计算错误；修复 IPC 主窗口引用警告。"
+              time="2026-04-28"
+              title="v1.5.0"
+              type="success" />
+            <n-timeline-item
               content="修复筛选单条记录时 PR 显示不一致的问题；修复日期快捷筛选（今天、最近N天）范围不正确的问题。"
               time="2026-04-27"
               title="v1.4.1"

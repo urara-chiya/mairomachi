@@ -92,6 +92,7 @@ export const INVOKE_CHANNELS = {
   RECORD_DELETE: 'record:delete' as const,
   RECORD_GET_DETAIL: 'record:getDetail' as const,
   RECORD_GET_STATS: 'record:getStats' as const,
+  RECORD_GET_STATS_BATCH: 'record:getStatsBatch' as const,
   RECORD_GET_BATCH_PR: 'record:getBatchPr' as const,
   RECORD_GET_CLAN_INFO: 'record:getClanInfo' as const,
   RECORD_ENRICH_BATTLE: 'record:enrichBattle' as const,
@@ -102,7 +103,10 @@ export const INVOKE_CHANNELS = {
 
   // Update
   UPDATE_CHECK: 'update:check' as const,
-  UPDATE_DOWNLOAD: 'update:download' as const
+  UPDATE_DOWNLOAD: 'update:download' as const,
+
+  CLIPBOARD_WRITE_IMAGE: 'clipboard:writeImage' as const,
+  CLIPBOARD_CAPTURE_AND_WRITE: 'clipboard:captureAndWrite' as const
 } satisfies Record<string, InvokeChannel>
 
 export const EMIT_CHANNELS = {

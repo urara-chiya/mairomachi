@@ -1,6 +1,6 @@
 {
   "name": "mairomachi",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "World of Warships查询小帮手",
   "main": "./out/main/index.js",
   "author": "2274835706@qq.com",
@@ -26,9 +26,9 @@
     "@electron-toolkit/utils": "^4.0.0",
     "axios": "^1.15.0",
     "chokidar": "^5.0.0",
+    "egoroof-blowfish": "^4.0.2",
     "electron-store": "^11.0.2",
-    "electron-updater": "^6.3.9",
-    "egoroof-blowfish": "^4.0.2"
+    "electron-updater": "^6.3.9"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
