@@ -44,6 +44,7 @@ function buildResponse(report: ReplayLiteReport): ReplayBattleReportResponse {
 
   return {
     matchResult,
+    mapId: report.mapId,
     mapName: formatMapName(report.mapName ?? null) ?? '',
     gameMode: localizeGameMode(report.gameMode ?? null) ?? '',
     matchGroup: localizeMatchGroup(report.matchGroup ?? null) ?? '',

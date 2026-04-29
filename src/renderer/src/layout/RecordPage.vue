@@ -12,6 +12,7 @@ import RecordStatCards from '@renderer/components/RecordStatCards.vue'
 import { formatDate, getResultTagType, getResultText } from '@renderer/utils/format'
 import { getSelfPlayer } from '@renderer/utils/record'
 import { getDayRange, getGameDayStart, formatShortDate } from '@renderer/utils/date'
+import { getMapName, initMapInfo } from '@renderer/composables/useMapInfo'
 import useSwitch from '@renderer/composables/useSwitch'
 
 /** 共享的 SelfPlayer 数据结构 */
@@ -312,6 +313,7 @@ onMounted(async () => {
   allyUI.value = config.ui.allyUI
   enemyUI.value = config.ui.enemyUI
   hidePlayerId.value = config.ui.hidePlayerId
+  await initMapInfo()
   await loadRecords()
   await loadStats()
   await loadDailyStats()
@@ -511,7 +513,11 @@ const dateShortcuts = computed(() => {
                 <n-tag :type="getResultTagType(selectedRecord?.matchResult?.result)">
                   {{ getResultText(selectedRecord?.matchResult?.result) }}
                 </n-tag>
-                <n-text>{{ selectedRecord?.mapName || '对局详情' }}</n-text>
+                <n-text>{{
+                  selectedRecord
+                    ? getMapName(selectedRecord.mapId, selectedRecord.mapName, shipNameLanguage)
+                    : '对局详情'
+                }}</n-text>
               </n-flex>
               <n-flex align="center">
                 <n-text depth="3" style="font-size: 14px">

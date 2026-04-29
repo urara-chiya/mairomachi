@@ -10,7 +10,7 @@ import { isAllowedExternalUrl } from '../shared/security'
 function createWindow(): void {
   logger.info('Main', 'Creating main window')
   const mainWindow = new BrowserWindow({
-    width: 1440,
+    width: 1600,
     height: 960,
     title: '迷路町',
     show: false,

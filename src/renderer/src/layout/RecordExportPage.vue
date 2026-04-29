@@ -8,6 +8,7 @@ import RecordPlayerHeader from '@renderer/components/RecordPlayerHeader.vue'
 import RecordStatCards from '@renderer/components/RecordStatCards.vue'
 import type { RecordStatsResponse, ShipInfoDetail } from '@shared/types'
 import RecordShipStatHeader from '@renderer/components/RecordShipStatHeader.vue'
+import ShipNameCard from '@renderer/components/ShipNameCard.vue'
 
 const message = useMessage()
 
@@ -56,6 +57,10 @@ function getShipName(shipId: string): string {
   const id = Number(shipId)
   const info = props.shipInfoMap[id]
   return info?.names?.[props.language as keyof typeof info.names] ?? info?.names?.['zh-cn'] ?? `Ship ${shipId}`
+}
+
+function getShipInfo(shipId: string): ShipInfoDetail | undefined {
+  return props.shipInfoMap[Number(shipId)]
 }
 
 const filterInfoText = computed(() => {
@@ -108,7 +113,7 @@ defineExpose({
       <n-table :bordered="false" :bottom-bordered="true" size="small" class="ship-table">
         <thead>
           <tr>
-            <th>舰船</th>
+            <th style="width: 160px">舰船</th>
             <th>场次</th>
             <th>PR</th>
             <th>胜率</th>
@@ -119,7 +124,15 @@ defineExpose({
         </thead>
         <tbody>
           <tr v-for="ship in stats?.shipStats" :key="ship.shipId">
-            <td>{{ getShipName(ship.shipId) }}</td>
+            <td>
+              <ship-name-card
+                mode="contour"
+                :reverse="false"
+                :tier="getShipInfo(ship.shipId)?.tier ?? '0'"
+                :type="getShipInfo(ship.shipId)?.type ?? 'Unknown'"
+                :name="getShipName(ship.shipId)"
+                :contour-image="getShipInfo(ship.shipId)?.images?.contour" />
+            </td>
             <td>{{ ship.battles }}</td>
             <td :style="{ color: ship.pr?.color }">
               {{ ship.pr?.value ?? 0 }}

@@ -71,6 +71,8 @@ export interface BattleRecord {
   }
   /** 地图名称 */
   mapName: string
+  /** 地图 ID */
+  mapId?: number
   /** 游戏模式 */
   gameMode: string
   /** 匹配分组 */

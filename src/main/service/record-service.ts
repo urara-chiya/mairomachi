@@ -140,6 +140,7 @@ export async function parseAndSaveReplayFile(replayPath: string, realm: Realm): 
   let record: BattleRecord = {
     matchResult: report.matchResult,
     mapName: report.mapName,
+    mapId: report.mapId,
     gameMode: report.gameMode,
     matchGroup: report.matchGroup,
     rawMatchGroup: report.rawMatchGroup,

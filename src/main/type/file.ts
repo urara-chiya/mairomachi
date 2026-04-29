@@ -14,6 +14,22 @@ export interface ShipInfoDetail {
   nation: string
   tier: string
   type: string
+  images?: ShipImages
+}
+
+/** 舰船图片资源 */
+export interface ShipImages {
+  small?: string
+  large?: string
+  medium?: string
+  contour?: string
+}
+
+/** 舰船类型图标资源 */
+export interface ShipTypeImage {
+  image: string
+  imageElite?: string
+  imagePremium?: string
 }
 
 /** `ship.json` 根结构 */
@@ -22,6 +38,22 @@ export interface FileShipInfo {
   date: string
   /** key 为 shipId */
   ships: Record<string, ShipInfoDetail>
+  /** key 为舰种类型（如 Destroyer） */
+  shipTypeImages: Record<string, ShipTypeImage>
+}
+
+/** 单条地图信息 */
+export interface MapInfoDetail {
+  /** key: 语言代码（如 en, zh-cn, zh-tw, ja），value: 地图名称 */
+  names: Record<string, string>
+}
+
+/** `maps.json` 根结构 */
+export interface FileMapInfo {
+  version: string
+  date: string
+  /** key 为 mapId */
+  maps: Record<string, MapInfoDetail>
 }
 
 /** `tempArenaInfo.json` 中的单舰船信息 */

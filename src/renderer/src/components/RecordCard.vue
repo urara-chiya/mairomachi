@@ -6,6 +6,7 @@ import PlayerCardWrapper from '@renderer/components/PlayerCardWrapper.vue'
 import ArenaPlayerStat from '@renderer/components/ArenaPlayerStat.vue'
 import ShipNameCard from '@renderer/components/ShipNameCard.vue'
 import { getShipName } from '@renderer/utils/ship'
+import { getMapName } from '@renderer/composables/useMapInfo'
 import { formatDate, formatInteger, getResultTagType, getResultText } from '@renderer/utils/format'
 
 const props = defineProps<{
@@ -25,6 +26,8 @@ const handleClick = (): void => {
 }
 
 const shipName = computed(() => getShipName(props.shipInfo, props.language || 'zh-cn'))
+
+const mapNameDisplay = computed(() => getMapName(props.record.mapId, props.record.mapName, props.language || 'zh-cn'))
 
 const damageItem = computed(() => {
   if (!props.player) return undefined
@@ -72,8 +75,9 @@ const handleDelete = (e: MouseEvent): void => {
             :name="shipName"
             :reverse="false"
             :tier="shipInfo.tier"
-            :type="shipInfo.type" />
-          <n-text strong style="font-size: 16px">{{ record.mapName }}</n-text>
+            :type="shipInfo.type"
+            :is-ally="true" />
+          <n-text strong style="font-size: 16px">{{ mapNameDisplay }}</n-text>
         </n-flex>
         <n-flex align="center">
           <n-text depth="3" style="font-size: 12px">{{ record.gameMode }} · {{ record.matchGroup }}</n-text>

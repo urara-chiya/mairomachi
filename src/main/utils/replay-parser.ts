@@ -315,6 +315,7 @@ export function parseReplayLite(filePath: string): ReplayLiteReport {
 
   return {
     matchResult,
+    mapId: typeof meta.mapId === 'number' ? meta.mapId : undefined,
     mapName: typeof meta.mapName === 'string' ? meta.mapName : undefined,
     gameMode: typeof meta.scenario === 'string' ? meta.scenario : undefined,
     matchGroup: typeof meta.matchGroup === 'string' ? meta.matchGroup : undefined,

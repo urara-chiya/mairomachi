@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="优化对局记录地图名显示，支持多语言切换；优化船名显示，新增舰种图标和舰船轮廓图模式；导出页单船统计表格使用轮廓图模式展示舰船信息。"
+              time="2026-04-29"
+              title="v1.6.0"
+              type="success" />
+            <n-timeline-item
               content="战绩统计导出页支持一键截图到剪切板；战绩统计页新增侧栏趋势图（胜率/场均/PR）；每日统计分割点调整为凌晨 04:00；导出页显示筛选条件状态；单船数据击杀与经验显示颜色等级；截图方案改为 Electron 原生实现更稳定；修复胜率计算错误；修复 IPC 主窗口引用警告。"
               time="2026-04-28"
               title="v1.5.0"

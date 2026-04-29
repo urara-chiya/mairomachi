@@ -6,6 +6,7 @@ import { buildPayload, ed25519Sign, generateEd25519KeyPair, generateNonce, getTi
 import { generateDeviceFingerprint } from '../utils/device'
 import { logger } from './logger'
 import { initShipInfoService } from './ship-info-service'
+import { initMapInfoService } from './map-info-service'
 
 /**
  * 激活设备（首次使用）
@@ -42,9 +43,10 @@ export async function activate(code: string): Promise<boolean> {
     saveKeys(code, publicKey, privateKey, fingerprint)
     logger.info('AuthService', 'Device keys and activation code saved')
 
-    // 4. 初始化 ShipInfo 缓存服务（登录后）
-    logger.info('AuthService', 'Initializing ShipInfo service after activation')
+    // 4. 初始化 ShipInfo / MapInfo 缓存服务（登录后）
+    logger.info('AuthService', 'Initializing ShipInfo and MapInfo services after activation')
     await initShipInfoService()
+    await initMapInfoService()
 
     return true
   } catch (error) {
@@ -102,10 +104,13 @@ export async function login(): Promise<LoginResult> {
     setToken(result.data.accessToken, result.data.expiresIn)
     logger.info('AuthService', `Login successful, new token expires in: ${result.data.expiresIn}s`)
 
-    // 初始化 ShipInfo 缓存服务（登录后，不阻塞启动）
-    logger.info('AuthService', 'Initializing ShipInfo service after login')
+    // 初始化 ShipInfo / MapInfo 缓存服务（登录后，不阻塞启动）
+    logger.info('AuthService', 'Initializing ShipInfo and MapInfo services after login')
     initShipInfoService().catch((err) => {
       logger.warn('AuthService', 'ShipInfo initialization failed after login, will retry later', err)
+    })
+    initMapInfoService().catch((err) => {
+      logger.warn('AuthService', 'MapInfo initialization failed after login, will retry later', err)
     })
 
     return { success: true, needReactivate: false }

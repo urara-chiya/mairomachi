@@ -35,6 +35,7 @@ export interface ReplayLiteReport {
     teamId?: number
     inferred?: boolean
   }
+  mapId?: number
   mapName?: string
   gameMode?: string
   matchGroup?: string
@@ -68,6 +69,7 @@ export interface ReplayPlayerBattleReport {
 /** 完整 replay 战斗报告（遗留类型） */
 export interface ReplayBattleReportResponse {
   matchResult: ReplayMatchResult
+  mapId?: number
   mapName: string
   gameMode: string
   matchGroup: string

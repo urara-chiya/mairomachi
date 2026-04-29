@@ -35,7 +35,12 @@ const shipTier = computed(() => props.shipInfo?.tier ?? '-1')
           :reverse="reverse"
           :player-index="playerIndex"
           :hide-player-name="hidePlayerName" />
-        <ship-name-card :name="shipName" :reverse="!reverse" :tier="shipTier" :type="shipType" />
+        <ship-name-card
+          :name="shipName"
+          :reverse="!reverse"
+          :tier="shipTier"
+          :type="shipType"
+          :is-ally="info.relation === 0 || info.relation === 1" />
       </n-flex>
       <n-flex :reverse="reverse" align="center" justify="space-between">
         <n-space :reverse="reverse" size="small">

@@ -46,3 +46,12 @@ export const SIMPLE_TYPE: Record<string, ShipTypeInfo> = {
     color: 'warning'
   }
 }
+
+/** 舰船轮廓图填充色（按舰种类型） */
+export const SHIP_TYPE_FILL_COLOR: Record<string, string> = {
+  Submarine: '#ADC9CC',
+  Destroyer: '#D9E7DC',
+  Cruiser: '#BFC7E6',
+  Battleship: '#AEB1AF',
+  AirCarrier: '#C8C8C8'
+}

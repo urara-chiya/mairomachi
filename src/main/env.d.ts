@@ -19,6 +19,8 @@ interface ImportMetaEnv {
   readonly VITE_API_ENDPOINT_RECORD_EVALUATE: string
   readonly VITE_API_ENDPOINT_RECORD_CLAN_INFO: string
   readonly VITE_API_ENDPOINT_RECORD_BATTLE_ENRICH: string
+  readonly VITE_API_ENDPOINT_INFO_MAPS: string
+  readonly VITE_API_ENDPOINT_INFO_MAPS_VERSION: string
 }
 
 interface ImportMeta {

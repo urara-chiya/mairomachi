@@ -147,6 +147,20 @@ export interface InvokeChannels {
     request: number[]
     response: Record<string, ShipInfoDetail>
   }
+  'ship:getTypeIcon': {
+    request: string
+    response: string | null
+  }
+
+  // Info
+  'info:getMaps': {
+    request: void
+    response: { version: string; date: string; maps: Record<string, { names: Record<string, string> }> } | null
+  }
+  'info:getMapVersion': {
+    request: void
+    response: string | null
+  }
 
   // Record
   'record:parseLatest': {
@@ -363,6 +377,12 @@ export interface IPCArenaAPI {
 
 export interface IPCShipAPI {
   getByIds: InvokeFn<'ship:getByIds'>
+  getTypeIcon: InvokeFn<'ship:getTypeIcon'>
+}
+
+export interface IPCInfoAPI {
+  getMaps: InvokeFn<'info:getMaps'>
+  getMapVersion: InvokeFn<'info:getMapVersion'>
 }
 
 export interface IPCRecordAPI {
@@ -407,6 +427,7 @@ export interface IpcApi {
   explorer: IPCExplorerAPI
   arena: IPCArenaAPI & IPCArenaEventsAPI
   ship: IPCShipAPI
+  info: IPCInfoAPI
   record: IPCRecordAPI
   update: IPCUpdateAPI
   clipboard: IPCClipboardAPI

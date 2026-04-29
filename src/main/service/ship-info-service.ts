@@ -6,10 +6,16 @@ import mairoClient from '../http/client'
 import { logger } from './logger'
 
 const CACHE_FILE_NAME = 'ship-info-cache.json'
+const ICONS_DIR_NAME = 'ship-icons'
 
 function getCacheFilePath(): string {
   const userDataPath = app.getPath('userData')
   return path.join(userDataPath, CACHE_FILE_NAME)
+}
+
+function getIconsDirPath(): string {
+  const userDataPath = app.getPath('userData')
+  return path.join(userDataPath, ICONS_DIR_NAME)
 }
 
 async function fetchShipInfoFromServer(): Promise<FileShipInfo | null> {
@@ -110,6 +116,7 @@ class ShipInfoCache {
     const cachedVersion = cached?.version
     if (cachedVersion === serverVersion) {
       logger.info('ShipInfoService', `Cache is up to date (version: ${cachedVersion})`)
+      await this.downloadIconsIfNeeded()
       return
     }
 
@@ -118,6 +125,65 @@ class ShipInfoCache {
     if (serverData) {
       this.memoryCache = serverData
       saveShipInfoToCache(serverData)
+      await this.downloadIcons()
+    }
+  }
+
+  /** 下载舰种 icon 到本地缓存 */
+  private async downloadIcons(): Promise<void> {
+    const iconsDir = getIconsDirPath()
+    if (!fs.existsSync(iconsDir)) {
+      fs.mkdirSync(iconsDir, { recursive: true })
+    }
+
+    const shipTypeImages = this.memoryCache?.shipTypeImages
+    if (!shipTypeImages) {
+      logger.warn('ShipInfoService', 'No shipTypeImages found in cache')
+      return
+    }
+
+    for (const [type, imageInfo] of Object.entries(shipTypeImages)) {
+      const url = imageInfo.image
+      if (!url) continue
+      const ext = path.extname(url) || '.png'
+      const filePath = path.join(iconsDir, `${type}${ext}`)
+      if (fs.existsSync(filePath)) continue
+
+      try {
+        const response = await fetch(url)
+        if (!response.ok) {
+          logger.warn('ShipInfoService', `Failed to download icon for ${type}: ${response.status}`)
+          continue
+        }
+        const buffer = Buffer.from(await response.arrayBuffer())
+        fs.writeFileSync(filePath, buffer)
+        logger.info('ShipInfoService', `Downloaded icon for ${type}: ${filePath}`)
+      } catch (error) {
+        logger.error('ShipInfoService', `Failed to download icon for ${type}`, error)
+      }
+    }
+  }
+
+  /** 如果本地没有 icon 则尝试下载（缓存命中时调用） */
+  private async downloadIconsIfNeeded(): Promise<void> {
+    const iconsDir = getIconsDirPath()
+    const shipTypeImages = this.memoryCache?.shipTypeImages
+    if (!shipTypeImages) return
+
+    let needDownload = false
+    for (const [type, imageInfo] of Object.entries(shipTypeImages)) {
+      const url = imageInfo.image
+      if (!url) continue
+      const ext = path.extname(url) || '.png'
+      const filePath = path.join(iconsDir, `${type}${ext}`)
+      if (!fs.existsSync(filePath)) {
+        needDownload = true
+        break
+      }
+    }
+
+    if (needDownload) {
+      await this.downloadIcons()
     }
   }
 
@@ -171,9 +237,21 @@ class ShipInfoCache {
     if (serverData) {
       this.memoryCache = serverData
       saveShipInfoToCache(serverData)
+      await this.downloadIcons()
       return true
     }
     return false
+  }
+
+  /** 获取舰种 icon 的本地文件路径 */
+  getShipTypeIconPath(type: string): string | null {
+    const shipTypeImages = this.memoryCache?.shipTypeImages
+    if (!shipTypeImages) return null
+    const imageInfo = shipTypeImages[type]
+    if (!imageInfo?.image) return null
+    const ext = path.extname(imageInfo.image) || '.png'
+    const filePath = path.join(getIconsDirPath(), `${type}${ext}`)
+    return fs.existsSync(filePath) ? filePath : null
   }
 }
 
@@ -184,3 +262,4 @@ export const initShipInfoService = (): Promise<void> => cache.initialize()
 export const getShipsInfo = (shipIds: number[]): Record<string, ShipInfoDetail> => cache.get(shipIds)
 export const getAllShipsInfo = (): FileShipInfo | null => cache.getAll()
 export const refreshShipInfoCache = (): Promise<boolean> => cache.refresh()
+export const getShipTypeIconPath = (type: string): string | null => cache.getShipTypeIconPath(type)

@@ -11,7 +11,8 @@ import monitor, { checkArenaNow, runMonitor, stopMonitor } from './service/arena
 import { selectDirPath, selectReplayFile } from './service/file-service'
 import { fetchArenaInfo } from './service/arena-info-service'
 import { clearArenaCache, getArenaCache } from './store'
-import { getShipsInfo } from './service/ship-info-service'
+import { getShipsInfo, getShipTypeIconPath } from './service/ship-info-service'
+import { getMapInfo } from './service/map-info-service'
 import { checkUpdate, downloadUpdate, getIsDownloading } from './service/update-service'
 import {
   fetchBatchPr,
@@ -400,6 +401,31 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     assertIsArray(shipIds, 'shipIds')
     logger.info('Ship', `Getting ships info: ${shipIds.length} ids`)
     return getShipsInfo(shipIds)
+  })
+
+  registerHandler(INVOKE_CHANNELS.SHIP_GET_TYPE_ICON, (_, type) => {
+    logger.debug('Ship', `Getting type icon for: ${type}`)
+    const iconPath = getShipTypeIconPath(type)
+    if (!iconPath) return null
+    try {
+      const image = nativeImage.createFromPath(iconPath)
+      return image.toDataURL()
+    } catch (err) {
+      logger.error('Ship', `Failed to load icon for ${type}: ${err}`)
+      return null
+    }
+  })
+
+  // Info
+  registerHandler(INVOKE_CHANNELS.INFO_GET_MAPS, () => {
+    logger.debug('Info', 'Getting map info')
+    return getMapInfo()
+  })
+
+  registerHandler(INVOKE_CHANNELS.INFO_GET_MAP_VERSION, () => {
+    logger.debug('Info', 'Getting map info version')
+    const mapInfo = getMapInfo()
+    return mapInfo?.version ?? null
   })
 
   // Update
