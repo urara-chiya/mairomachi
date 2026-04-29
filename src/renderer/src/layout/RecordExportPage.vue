@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 
 import AppFooter from '@renderer/components/AppFooter.vue'
@@ -27,6 +27,29 @@ const props = defineProps<{
 
 const captureRef = ref<HTMLElement | null>(null)
 const isCapturing = ref(false)
+const imageLoading = ref(true)
+const readyCount = ref(0)
+
+const totalShipCount = computed(() => props.stats?.shipStats?.length ?? 0)
+
+watch(
+  () => props.stats?.shipStats,
+  () => {
+    imageLoading.value = true
+    readyCount.value = 0
+    if (totalShipCount.value === 0) {
+      imageLoading.value = false
+    }
+  },
+  { immediate: true }
+)
+
+function onShipReady(): void {
+  readyCount.value++
+  if (readyCount.value >= totalShipCount.value) {
+    imageLoading.value = false
+  }
+}
 
 async function copyToClipboard(): Promise<void> {
   if (!captureRef.value) return
@@ -110,47 +133,50 @@ defineExpose({
 
       <!-- 单船数据 -->
       <record-ship-stat-header :filter-info="filterInfoText" style="margin-bottom: 8px" />
-      <n-table :bordered="false" :bottom-bordered="true" size="small" class="ship-table">
-        <thead>
-          <tr>
-            <th style="width: 160px">舰船</th>
-            <th>场次</th>
-            <th>PR</th>
-            <th>胜率</th>
-            <th>伤害</th>
-            <th>击杀</th>
-            <th>经验</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="ship in stats?.shipStats" :key="ship.shipId">
-            <td>
-              <ship-name-card
-                mode="contour"
-                :reverse="false"
-                :tier="getShipInfo(ship.shipId)?.tier ?? '0'"
-                :type="getShipInfo(ship.shipId)?.type ?? 'Unknown'"
-                :name="getShipName(ship.shipId)"
-                :contour-image="getShipInfo(ship.shipId)?.images?.contour" />
-            </td>
-            <td>{{ ship.battles }}</td>
-            <td :style="{ color: ship.pr?.color }">
-              {{ ship.pr?.value ?? 0 }}
-            </td>
-            <td :style="{ color: ship.winRate?.color }">{{ ship.winRate?.value ?? 0 }}%</td>
-            <td :style="{ color: ship.avgDamage?.color }">
-              {{ ship.avgDamage?.value ?? 0 }}
-            </td>
-            <td :style="{ color: ship.avgFrags?.color }">{{ ship.avgFrags?.value ?? 0 }}</td>
-            <td :style="{ color: ship.avgExp?.color }">{{ ship.avgExp?.value ?? 0 }}</td>
-          </tr>
-          <tr v-if="!stats?.shipStats?.length">
-            <td colspan="7">
-              <n-text depth="3">暂无数据</n-text>
-            </td>
-          </tr>
-        </tbody>
-      </n-table>
+      <n-spin :show="imageLoading" description="图片加载中...">
+        <n-table :bordered="false" :bottom-bordered="true" size="small" class="ship-table">
+          <thead>
+            <tr>
+              <th style="width: 160px">舰船</th>
+              <th>场次</th>
+              <th>PR</th>
+              <th>胜率</th>
+              <th>伤害</th>
+              <th>击杀</th>
+              <th>经验</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="ship in stats?.shipStats" :key="ship.shipId">
+              <td>
+                <ship-name-card
+                  mode="contour"
+                  :reverse="false"
+                  :tier="getShipInfo(ship.shipId)?.tier ?? '0'"
+                  :type="getShipInfo(ship.shipId)?.type ?? 'Unknown'"
+                  :name="getShipName(ship.shipId)"
+                  :contour-image="getShipInfo(ship.shipId)?.images?.contour"
+                  @ready="onShipReady" />
+              </td>
+              <td>{{ ship.battles }}</td>
+              <td :style="{ color: ship.pr?.color }">
+                {{ ship.pr?.value ?? 0 }}
+              </td>
+              <td :style="{ color: ship.winRate?.color }">{{ ship.winRate?.value ?? 0 }}%</td>
+              <td :style="{ color: ship.avgDamage?.color }">
+                {{ ship.avgDamage?.value ?? 0 }}
+              </td>
+              <td :style="{ color: ship.avgFrags?.color }">{{ ship.avgFrags?.value ?? 0 }}</td>
+              <td :style="{ color: ship.avgExp?.color }">{{ ship.avgExp?.value ?? 0 }}</td>
+            </tr>
+            <tr v-if="!stats?.shipStats?.length">
+              <td colspan="7">
+                <n-text depth="3">暂无数据</n-text>
+              </td>
+            </tr>
+          </tbody>
+        </n-table>
+      </n-spin>
 
       <!-- Footer -->
       <app-footer style="margin-top: 12px" />

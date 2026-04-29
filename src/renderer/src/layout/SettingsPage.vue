@@ -313,7 +313,7 @@ onBeforeUnmount(() => {
           <n-form-item label="敌方队伍UI方向" path="enemyUI">
             <n-select v-model:value="settingsForm.ui.enemyUI" :options="arenaMonitorDirectionOptions" />
           </n-form-item>
-          <n-form-item label="舰船名称语言" path="shipNameLanguage">
+          <n-form-item label="WG数据语言" path="shipNameLanguage">
             <n-select v-model:value="settingsForm.ui.shipNameLanguage" :options="shipNameLanguageOptions" />
           </n-form-item>
           <n-form-item label="隐藏玩家ID" path="hidePlayerId">

@@ -73,10 +73,10 @@ export function tintContourImage(url: string, tintColor: string): Promise<string
           data[i] = tr
           data[i + 1] = tg
           data[i + 2] = tb
-          continue
         }
 
-        // 其他（黑色轮廓及抗锯齿边缘）保持原色
+        // 所有非背景像素强制不透明，去除 WG 轮廓图本身可能存在的预设透明度
+        data[i + 3] = 255
       }
 
       ctx.putImageData(imageData, 0, 0)

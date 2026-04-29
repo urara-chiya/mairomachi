@@ -13,6 +13,10 @@ const props = defineProps<{
   contourImage?: string
 }>()
 
+const emit = defineEmits<{
+  ready: []
+}>()
+
 const mode = computed(() => props.mode ?? 'standard')
 const isAlly = computed(() => props.isAlly ?? true)
 const formattedTier = computed(() => ROMA[props.tier] ?? '??')
@@ -47,14 +51,27 @@ const shipTypeColor = computed(() => SHIP_TYPE_FILL_COLOR[props.type] ?? '#B2B2B
 async function processContourImage(url: string | undefined): Promise<void> {
   if (!url) {
     processedContourImage.value = null
+    emit('ready')
     return
   }
-  processedContourImage.value = await tintContourImage(url, shipTypeColor.value)
+  try {
+    processedContourImage.value = await tintContourImage(url, shipTypeColor.value)
+  } catch {
+    processedContourImage.value = null
+  } finally {
+    emit('ready')
+  }
 }
 
 watch(
   () => props.contourImage,
   (url) => processContourImage(url),
+  { immediate: true }
+)
+
+watch(
+  () => props.type,
+  () => loadIcon(),
   { immediate: true }
 )
 

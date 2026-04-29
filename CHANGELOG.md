@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.6.0] - 2026-04-29
+
+### Added
+
+- **地图名多语言显示**：后端新增地图信息维护体系（`mapInfo.json`），`MapInfoFileService` + `MapInfoCache` + `MapInfoUpdateTask` 定期从 WG API 更新多语言地图名称；`InfoController` 新增 `/maps` 系列接口。前端 `BattleRecord` 扩展 `mapId` 字段，`replay-parser.ts` 解析时提取 `mapId`；渲染时优先通过 `mapId` 查询多语言地图名，旧数据 fallback 到 `mapName`；新增 `map-info-service.ts` 和 `useMapInfo` composable。
+- **舰种图标**：后端 `ShipInfoDetail` 扩展 `images` 字段（轮廓图/舰船图 URL），`FileShipInfo` 扩展 `shipTypeImages`（舰种图标资源）；前端 `ship-info-service.ts` 初始化时下载 icon 到本地缓存。`ShipNameCard` 标准模式新增舰种 icon，通过 IPC Data URL 加载避免 `file://` 权限问题。
+- **轮廓图模式**：`ShipNameCard` 新增 `contour` 模式，上方显示舰船轮廓图，下方显示舰种 icon + 等级 + 船名。导出页单船统计表格使用 `contour` 模式替代直接文本船名。
+- **敌我颜色区分**：`ShipNameCard` 新增 `isAlly` 属性，对局监控页和记录详情页按敌我关系显示不同颜色（`success`/`error`）。
+- **轮廓图 tint 处理**：`utils/image.ts` 新增 `tintContourImage`，通过 Canvas 逐像素处理：纯白背景→透明、灰色填充→舰种目标色、黑色轮廓保持原色；采样图片中心偏底部像素作为填充参考色，自适应不同图片的灰度差异。
+- **舰种填充色常量**：`shared/constants/ships.ts` 新增 `SHIP_TYPE_FILL_COLOR`（SS `#ADC9CC` / DD `#D9E7DC` / CA `#BFC7E6` / BB `#AEB1AF` / CV `#C8C8C8`）。
+
+### Changed
+
+- **轮廓图显示尺寸**：统一高度 20px，宽度按原始比例自适应；Canvas 处理时水平拉伸 1.5 倍，使整体更扁长且保持船与船之间的大小关系。
+- **CSP 策略**：`img-src` 从 `'self' data:` 放宽为 `'self' data: https:`，允许加载 WG CDN 的外部 HTTPS 图片。
+
+### Fixed
+
+- **启动缓存同步**：修复 `StartupInitializationTask` 中 `shipInfo`/`mapInfo` 版本缓存未调用 `reload()` 的问题，确保文件更新后内存缓存同步刷新。
+- **IPC 文件权限**：修复渲染进程无法通过 `file://` 加载本地舰种 icon 的问题，IPC `ship:getTypeIcon` 改为返回 Data URL。
+- **env 配置**：补充 `.env` / `.env.development` / `.env.example` 中的 `VITE_API_ENDPOINT_INFO_MAPS` 和 `VITE_API_ENDPOINT_INFO_MAPS_VERSION` 端点配置。
+
 ## [1.5.0] - 2026-04-28
 
 ### Added
