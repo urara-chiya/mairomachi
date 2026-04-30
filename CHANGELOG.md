@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.6.2] - 2026-04-30
+
+### Added
+
+- **手动更新缓存数据**：在设置窗口的“检查更新”区域添加了两个按钮，用于手动更新舰船和地图数据。
+
 ## [1.6.1] - 2026-04-30
 
 ### Added

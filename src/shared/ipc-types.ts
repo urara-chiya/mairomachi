@@ -151,6 +151,10 @@ export interface InvokeChannels {
     request: string
     response: string | null
   }
+  'ship:refreshInfo': {
+    request: void
+    response: boolean
+  }
 
   // Info
   'info:getMaps': {
@@ -160,6 +164,10 @@ export interface InvokeChannels {
   'info:getMapVersion': {
     request: void
     response: string | null
+  }
+  'info:refreshMaps': {
+    request: void
+    response: boolean
   }
 
   // Record
@@ -378,11 +386,13 @@ export interface IPCArenaAPI {
 export interface IPCShipAPI {
   getByIds: InvokeFn<'ship:getByIds'>
   getTypeIcon: InvokeFn<'ship:getTypeIcon'>
+  refreshInfo: InvokeFn<'ship:refreshInfo'>
 }
 
 export interface IPCInfoAPI {
   getMaps: InvokeFn<'info:getMaps'>
   getMapVersion: InvokeFn<'info:getMapVersion'>
+  refreshMaps: InvokeFn<'info:refreshMaps'>
 }
 
 export interface IPCRecordAPI {

@@ -101,10 +101,12 @@ export const INVOKE_CHANNELS = {
   // Ship
   SHIP_GET_BY_IDS: 'ship:getByIds' as const,
   SHIP_GET_TYPE_ICON: 'ship:getTypeIcon' as const,
+  SHIP_REFRESH_INFO: 'ship:refreshInfo' as const,
 
   // Info
   INFO_GET_MAPS: 'info:getMaps' as const,
   INFO_GET_MAP_VERSION: 'info:getMapVersion' as const,
+  INFO_REFRESH_MAPS: 'info:refreshMaps' as const,
 
   // Update
   UPDATE_CHECK: 'update:check' as const,

@@ -117,12 +117,14 @@ const ipc = {
 
   ship: {
     getByIds: (shipIds) => invoke(INVOKE_CHANNELS.SHIP_GET_BY_IDS, shipIds),
-    getTypeIcon: (type) => invoke(INVOKE_CHANNELS.SHIP_GET_TYPE_ICON, type)
+    getTypeIcon: (type) => invoke(INVOKE_CHANNELS.SHIP_GET_TYPE_ICON, type),
+    refreshInfo: () => invoke(INVOKE_CHANNELS.SHIP_REFRESH_INFO)
   },
 
   info: {
     getMaps: () => invoke(INVOKE_CHANNELS.INFO_GET_MAPS),
-    getMapVersion: () => invoke(INVOKE_CHANNELS.INFO_GET_MAP_VERSION)
+    getMapVersion: () => invoke(INVOKE_CHANNELS.INFO_GET_MAP_VERSION),
+    refreshMaps: () => invoke(INVOKE_CHANNELS.INFO_REFRESH_MAPS)
   },
 
   update: {

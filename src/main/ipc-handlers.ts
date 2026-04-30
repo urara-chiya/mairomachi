@@ -11,8 +11,8 @@ import monitor, { checkArenaNow, runMonitor, stopMonitor } from './service/arena
 import { selectDirPath, selectReplayFile } from './service/file-service'
 import { fetchArenaInfo } from './service/arena-info-service'
 import { clearArenaCache, getArenaCache } from './store'
-import { getShipsInfo, getShipTypeIconPath } from './service/ship-info-service'
-import { getMapInfo } from './service/map-info-service'
+import { getShipsInfo, getShipTypeIconPath, refreshShipInfoCache } from './service/ship-info-service'
+import { getMapInfo, refreshMapInfoCache } from './service/map-info-service'
 import { checkUpdate, downloadUpdate, getIsDownloading } from './service/update-service'
 import {
   fetchBatchPr,
@@ -416,6 +416,11 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     }
   })
 
+  registerHandler(INVOKE_CHANNELS.SHIP_REFRESH_INFO, async () => {
+    logger.info('Ship', 'Refreshing ship info cache')
+    return await refreshShipInfoCache()
+  })
+
   // Info
   registerHandler(INVOKE_CHANNELS.INFO_GET_MAPS, () => {
     logger.debug('Info', 'Getting map info')
@@ -426,6 +431,11 @@ export function registerIPCHandlers(mainWindow: BrowserWindow): void {
     logger.debug('Info', 'Getting map info version')
     const mapInfo = getMapInfo()
     return mapInfo?.version ?? null
+  })
+
+  registerHandler(INVOKE_CHANNELS.INFO_REFRESH_MAPS, async () => {
+    logger.info('Info', 'Refreshing map info cache')
+    return await refreshMapInfoCache()
   })
 
   // Update

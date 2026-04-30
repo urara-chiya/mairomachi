@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="在设置窗口的“检查更新”区域添加了手动更新舰船和地图数据的按钮"
+              time="2026-04-30"
+              title="v1.6.2"
+              type="success" />
+            <n-timeline-item
               content="侧栏趋势图重构为双轴折线图（场次+胜率 / PR+场均）；新增舰种占比和舰船占比饼图，支持 hover 中心数字交互；筛选栏新增重置按钮；优化空列表和信息提示的展示方式；修复记录详情舰种 icon、轮廓图透明度和导出页加载状态。"
               time="2026-04-30"
               title="v1.6.1"

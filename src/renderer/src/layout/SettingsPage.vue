@@ -274,6 +274,34 @@ const { execute: handleDownloadUpdate, loading: downloadUpdateLoading } = useAsy
   }
 })
 
+const { execute: handleRefreshShipInfo, loading: refreshShipInfoLoading } = useAsync({
+  fn: async () => {
+    const result = await window.ipc.ship.refreshInfo()
+    if (result) {
+      message.success('舰船数据缓存已更新~')
+    } else {
+      message.info('舰船数据缓存已为最新，无需更新')
+    }
+  },
+  onError: () => {
+    message.error('舰船数据缓存更新失败，请稍后重试')
+  }
+})
+
+const { execute: handleRefreshMapInfo, loading: refreshMapInfoLoading } = useAsync({
+  fn: async () => {
+    const result = await window.ipc.info.refreshMaps()
+    if (result) {
+      message.success('地图数据缓存已更新~')
+    } else {
+      message.info('地图数据缓存已为最新，无需更新')
+    }
+  },
+  onError: () => {
+    message.error('地图数据缓存更新失败，请稍后重试')
+  }
+})
+
 let unbindProgress: (() => void) | null = null
 
 onMounted(async () => {
@@ -357,6 +385,15 @@ onBeforeUnmount(() => {
             <n-gradient-text type="primary">{{ latestVersionInfo.currentVersion }}</n-gradient-text>
           </n-statistic>
           <n-button :loading="checkUpdateLoading" type="primary" @click="handleCheckUpdate"> 检查更新 </n-button>
+          <n-alert type="info" show-icon>
+            如果你的舰船和地图信息显示看起来不是很正常，可以尝试手动更新一下数据UwU
+          </n-alert>
+          <n-button :loading="refreshShipInfoLoading" type="primary" @click="handleRefreshShipInfo">
+            更新舰船数据
+          </n-button>
+          <n-button :loading="refreshMapInfoLoading" type="primary" @click="handleRefreshMapInfo">
+            更新地图数据
+          </n-button>
         </n-flex>
       </n-spin>
       <n-flex align="center" class="settings-option" justify="end" @mousedown.prevent>
