@@ -227,6 +227,11 @@ const activeMenuKey = ref<string>('intro')
 
           <n-timeline>
             <n-timeline-item
+              content="侧栏趋势图重构为双轴折线图（场次+胜率 / PR+场均）；新增舰种占比和舰船占比饼图，支持 hover 中心数字交互；筛选栏新增重置按钮；优化空列表和信息提示的展示方式；修复记录详情舰种 icon、轮廓图透明度和导出页加载状态。"
+              time="2026-04-30"
+              title="v1.6.1"
+              type="success" />
+            <n-timeline-item
               content="优化对局记录地图名显示，支持多语言切换；优化船名显示，新增舰种图标和舰船轮廓图模式；导出页单船统计表格使用轮廓图模式展示舰船信息。"
               time="2026-04-29"
               title="v1.6.0"

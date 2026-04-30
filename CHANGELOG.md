@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/lang/zh-CN/).
 
+## [1.6.1] - 2026-04-30
+
+### Added
+
+- **侧栏双轴趋势图**：将三个独立折线图重构为两个双轴图——场次+胜率、PR+场均；胜率轴固定 0-100 范围；新增近一周场次统计曲线。
+- **舰种/舰船占比饼图**：战绩记录页侧栏新增两个环形饼图，本地计算筛选后数据的舰种分布和舰船分布；舰船占比图例限制为场次最多的 5 条船+其他。
+- **饼图中心数字交互**：环形中心显示总场次，hover 到扇区时切换为该分类场次，移出恢复总计。
+- **清空筛选**：筛选栏新增"重置"按钮，一键清空船只和日期筛选条件。
+
+### Changed
+
+- **筛选栏信息提示**：列表页的 info alert 移至筛选栏右侧，改为 `InfoCircle` tooltip，节省列表纵向空间。
+- **空列表提示**：筛选结果为空时，列表区由 warning alert 改为 `n-empty` 空状态组件。
+- **趋势图数据源**：`dailyStats` 新增 `battles`（场次）数据，与胜率/场均/PR同步按游戏日（04:00）分组。
+
+### Fixed
+
+- **对局记录详情舰种 icon**：`ShipNameCard` 新增 `watch(props.type)`，修复 `shipInfoMap` 异步加载完成后 type 变化不触发 icon 加载的问题。
+- **轮廓图透明度**：`tintContourImage` 强制所有非背景像素 `alpha=255`，去除 WG 轮廓图本身可能存在的预设透明度。
+- **导出页图片加载**：`RecordExportPage` 单船表格添加 `n-spin` loading 状态；`ShipNameCard` 处理完成后 emit ready 事件统计加载进度。
+
 ## [1.6.0] - 2026-04-29
 
 ### Added

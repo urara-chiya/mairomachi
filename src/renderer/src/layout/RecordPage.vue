@@ -1,13 +1,15 @@
 <script lang="ts" setup>
 import { computed, CSSProperties, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
-import { CloseOutlined, ExportOutlined, ImportOutlined } from '@vicons/antd'
+import { CloseOutlined, ExportOutlined, ImportOutlined, FilterOutlined, InfoCircleFilled } from '@vicons/antd'
 import { useAsync } from '@renderer/composables/useAsync'
 import type { BattleRecord, RecordStatsResponse, ShipInfoDetail, ShipLanguageKey } from '@shared/types'
 import RecordDetailPage from '@renderer/layout/RecordDetailPage.vue'
 import RecordCard from '@renderer/components/RecordCard.vue'
-import RecordTrendLineChart from '@renderer/components/charts/RecordTrendLineChart.vue'
+import RecordTrendMultiLineChart from '@renderer/components/charts/RecordTrendMultiLineChart.vue'
+import RecordPieChart from '@renderer/components/charts/RecordPieChart.vue'
 import RecordExportPage from '@renderer/layout/RecordExportPage.vue'
+import { SIMPLE_TYPE } from '@shared/constants/ships'
 import RecordStatCards from '@renderer/components/RecordStatCards.vue'
 import { formatDate, getResultTagType, getResultText } from '@renderer/utils/format'
 import { getSelfPlayer } from '@renderer/utils/record'
@@ -42,7 +44,8 @@ const dailyStats = ref<{
   winRate: { date: string; value: number }[]
   avgDamage: { date: string; value: number }[]
   pr: { date: string; value: number }[]
-}>({ winRate: [], avgDamage: [], pr: [] })
+  battles: { date: string; value: number }[]
+}>({ winRate: [], avgDamage: [], pr: [], battles: [] })
 
 const { isOpen: exportModalShow, open: handleExportOpen, close: handleExportClose } = useSwitch()
 /** 导出用玩家信息 */
@@ -240,6 +243,10 @@ const { execute: loadDailyStats, loading: isLoadingDailyStats } = useAsync({
       pr: days.map((day, i) => ({
         date: formatShortDate(day),
         value: responses[i]?.overallPr?.value ?? 0
+      })),
+      battles: requests.map((req, i) => ({
+        date: formatShortDate(days[i]),
+        value: req.records.length
       }))
     }
   },
@@ -342,7 +349,8 @@ const recordFilterWrapperContentStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '8px',
-  flexWrap: 'nowrap'
+  flexWrap: 'nowrap',
+  paddingBlock: 0
 }
 
 const dateShortcutsConfig = [
@@ -372,6 +380,43 @@ const dateShortcutsConfig = [
     }
   }
 ]
+
+const shipTypePieData = computed(() => {
+  const counts: Record<string, number> = {}
+  for (const r of filteredRecords.value) {
+    const self = getSelfPlayer(r)
+    if (!self) continue
+    const type = shipInfoMap.value[self.shipId]?.type ?? 'Unknown'
+    counts[type] = (counts[type] ?? 0) + 1
+  }
+  return Object.entries(counts).map(([type, value]) => ({
+    name: SIMPLE_TYPE[type]?.tag ?? type,
+    value
+  }))
+})
+
+const shipPieData = computed(() => {
+  const counts: Record<number, number> = {}
+  for (const r of filteredRecords.value) {
+    const self = getSelfPlayer(r)
+    if (!self) continue
+    counts[self.shipId] = (counts[self.shipId] ?? 0) + 1
+  }
+  return Object.entries(counts)
+    .map(([shipId, value]) => {
+      const id = Number(shipId)
+      const info = shipInfoMap.value[id]
+      const name = info?.names?.[shipNameLanguage.value] ?? info?.names?.['zh-cn'] ?? `Ship ${id}`
+      return { name, value }
+    })
+    .sort((a, b) => b.value - a.value)
+})
+
+function clearFilters(): void {
+  filterShipId.value = null
+  filterDateRange.value = null
+}
+
 const dateShortcuts = computed(() => {
   const shortcuts = {}
   dateShortcutsConfig.filter((cfg) => {
@@ -422,7 +467,8 @@ const dateShortcuts = computed(() => {
             embedded
             size="small"
             :bordered="false">
-            <n-space :size="8">
+            <n-flex :size="8" align="center">
+              <n-icon :depth="3" :size="18" style="margin-right: 4px"><filter-outlined /></n-icon>
               <n-select
                 v-model:value="filterShipId"
                 :options="shipOptions"
@@ -438,8 +484,28 @@ const dateShortcuts = computed(() => {
                 size="small"
                 style="width: 320px"
                 :shortcuts="dateShortcuts" />
-            </n-space>
-            <n-space :size="8">
+              <n-button size="small" secondary type="primary" @click="clearFilters">
+                <template #icon>
+                  <n-icon :component="CloseOutlined" />
+                </template>
+                重置
+              </n-button>
+            </n-flex>
+            <n-flex :size="8" align="center">
+              <n-tooltip
+                :style="{ padding: 0, background: 'transparent' }"
+                trigger="hover"
+                placement="left"
+                :show-arrow="false">
+                <template #trigger>
+                  <n-icon :color="'rgb(32 128 240)'" :size="24" style="margin-right: 4px">
+                    <info-circle-filled />
+                  </n-icon>
+                </template>
+                <n-alert :bordered="false" :show-icon="true" size="small" type="info">
+                  仅随机战（PvP）对局会被自动保存，其他模式（排位、军团战、剧情等）不会计入记录
+                </n-alert>
+              </n-tooltip>
               <n-button secondary size="small" type="primary" @click="importReplay">
                 <template #icon>
                   <n-icon :component="ImportOutlined" />
@@ -452,31 +518,14 @@ const dateShortcuts = computed(() => {
                 </template>
                 导出统计
               </n-button>
-            </n-space>
+            </n-flex>
           </n-card>
 
           <!-- 列表 + 侧栏 -->
-          <n-grid :x-gap="8" :cols="8">
-            <n-grid-item :span="6">
+          <n-grid :x-gap="8" :cols="6">
+            <n-grid-item :span="4">
               <n-card class="record-main-wrapper" size="small" content-scrollable :bordered="false">
-                <n-alert
-                  v-if="filteredRecords.length === 0"
-                  :bordered="false"
-                  :show-icon="true"
-                  size="small"
-                  type="warning"
-                  style="width: 100%">
-                  没有符合筛选条件的记录，请调整筛选条件
-                </n-alert>
-                <n-alert
-                  v-else
-                  :bordered="false"
-                  :show-icon="true"
-                  size="small"
-                  type="info"
-                  style="width: 100%; margin-bottom: 8px">
-                  仅随机战（PvP）对局会被自动保存，其他模式（排位、军团战、剧情等）不会计入记录。
-                </n-alert>
+                <n-empty v-if="filteredRecords.length === 0" description="筛选条件下您还没有窝过呢>_<" />
                 <record-card
                   v-for="record in filteredRecords"
                   :key="record.id"
@@ -491,9 +540,29 @@ const dateShortcuts = computed(() => {
             </n-grid-item>
             <n-grid-item :span="2">
               <n-card class="record-main-wrapper" size="small" content-scrollable :bordered="false">
-                <record-trend-line-chart title="胜率" :data="dailyStats.winRate" color="#18a058" unit="%" />
-                <record-trend-line-chart title="场均" :data="dailyStats.avgDamage" color="#f0a020" />
-                <record-trend-line-chart title="PR" :data="dailyStats.pr" color="#2080f0" />
+                <record-trend-multi-line-chart
+                  :left-series="{ name: '场次', color: '#d03050', data: dailyStats.battles }"
+                  :right-series="{
+                    name: '胜率',
+                    color: '#18a058',
+                    data: dailyStats.winRate,
+                    unit: '%',
+                    min: 0,
+                    max: 100
+                  }"
+                  style="margin-bottom: 8px" />
+                <record-trend-multi-line-chart
+                  :left-series="{ name: 'PR', color: '#2080f0', data: dailyStats.pr }"
+                  :right-series="{ name: '场均', color: '#f0a020', data: dailyStats.avgDamage }"
+                  style="margin-bottom: 8px" />
+                <n-grid :cols="2" :x-gap="4">
+                  <n-grid-item>
+                    <record-pie-chart title="种类占比" :data="shipTypePieData" style="margin-bottom: 8px" />
+                  </n-grid-item>
+                  <n-grid-item>
+                    <record-pie-chart title="场次占比" :data="shipPieData" :limit="5" style="margin-bottom: 8px" />
+                  </n-grid-item>
+                </n-grid>
               </n-card>
             </n-grid-item>
           </n-grid>
